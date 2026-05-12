@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<title>TourBox Coach · Setup</title>
+<style>
+:root {
+  --bg: #0f1115; --bg-2: #161a22; --bg-3: #1d2230;
+  --ink: #e7ecf3; --ink-dim: #aab3c2; --ink-faint: #7c879a;
+  --rule: #2a3142; --accent: #7c5cff; --accent-2: #22d3ee;
+  --good: #34d399; --warn: #fbbf24; --bad: #f87171;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 640px; margin: 0 auto; padding: 28px 20px 56px; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+h1 { margin: 0; font-size: 18px; font-weight: 700; }
+.tag { font-size: 11px; color: var(--ink-faint); letter-spacing: 0.06em; text-transform: uppercase; }
+a.coach-link { color: var(--ink-dim); text-decoration: none; font-size: 12px; border: 1px solid var(--rule); border-radius: 8px; padding: 6px 12px; }
+a.coach-link:hover { background: var(--bg-3); color: var(--ink); }
+.card { background: var(--bg-2); border: 1px solid var(--rule); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; }
+.card h2 { margin: 0 0 10px; font-size: 13px; font-weight: 600; }
+.row { display: flex; align-items: center; gap: 10px; }
+.row + .row { margin-top: 6px; }
+.muted { color: var(--ink-faint); font-size: 11px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.tile { background: var(--bg-3); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px; }
+.tile .lbl { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.tile .dot { width: 7px; height: 7px; border-radius: 50%; box-shadow: 0 0 6px currentColor; }
+.tile .v { font-weight: 600; font-size: 13px; word-break: break-word; }
+.tile .v2 { font-size: 11px; color: var(--ink-dim); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; margin-top: 1px; word-break: break-all; }
+button, input { font: inherit; }
+button { background: var(--bg-3); color: var(--ink); border: 1px solid var(--rule); border-radius: 7px; padding: 6px 12px; cursor: pointer; font-size: 12px; }
+button:hover:not(:disabled) { background: #252b3c; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+button.primary { background: var(--accent); border-color: var(--accent); color: white; font-weight: 600; }
+button.primary:hover:not(:disabled) { background: #6a4dff; }
+input[type="text"], input[type="password"] { background: var(--bg-3); color: var(--ink); border: 1px solid var(--rule); border-radius: 6px; padding: 6px 10px; font-size: 12px; width: 100%; font-family: inherit; }
+.scan-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.net-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.net-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--bg-3); border: 1px solid transparent; border-radius: 6px; }
+.net-row:hover { border-color: var(--rule); }
+.net-row.connected { background: rgba(52, 211, 153, 0.08); border-color: var(--good); }
+.net-row.connected:hover { border-color: var(--good); }
+.net-meta { flex: 1; min-width: 0; }
+.net-name { font-size: 13px; display: flex; align-items: center; gap: 6px; }
+.net-sub { font-size: 10px; color: var(--ink-faint); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; margin-top: 2px; }
+.in-use { font-size: 8px; padding: 1px 5px; border-radius: 999px; background: var(--accent); color: white; text-transform: uppercase; letter-spacing: 0.05em; }
+.bars { display: flex; align-items: flex-end; gap: 1px; width: 14px; height: 14px; }
+.bars span { flex: 1; background: var(--rule); border-radius: 1px; }
+.bars span:nth-child(1) { height: 25%; } .bars span:nth-child(2) { height: 50%; } .bars span:nth-child(3) { height: 75%; } .bars span:nth-child(4) { height: 100%; }
+.bars span.on { background: var(--accent-2); }
+.pwd { margin-top: 8px; padding: 10px; background: var(--bg-3); border: 1px solid var(--accent); border-radius: 7px; }
+.pwd label { font-size: 11px; color: var(--ink-dim); display: block; margin-bottom: 4px; }
+.pwd-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 8px; }
+.ap-form { display: flex; flex-direction: column; gap: 10px; }
+.ap-form label { display: flex; flex-direction: column; gap: 3px; }
+.ap-form label > span { font-size: 9px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.06em; }
+.flash { padding: 8px 12px; border-radius: 7px; font-size: 12px; margin-bottom: 10px; }
+.flash-error { background: rgba(168,35,35,0.18); border: 1px solid var(--bad); color: #ffb4b4; }
+.flash-info { background: rgba(44,125,46,0.18); border: 1px solid var(--good); color: #b9f0c1; }
+.spin { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--rule); border-top-color: var(--accent); border-radius: 50%; animation: sp 0.7s linear infinite; vertical-align: middle; }
+@keyframes sp { to { transform: rotate(360deg); } }
+.net-band { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 999px; margin-left: 5px; vertical-align: middle; }
+.band-5g  { background: rgba(251, 146, 60, 0.18); color: #c2620a; border: 1px solid rgba(251, 146, 60, 0.45); }
+.band-24g { background: rgba(52, 211, 153, 0.12); color: #047857; border: 1px solid rgba(52, 211, 153, 0.35); }
+.net-warn { font-size: 11px; color: #b45309; background: rgba(251, 191, 36, 0.12); border-left: 2px solid #d97706; padding: 3px 8px; margin-top: 3px; border-radius: 2px; }
+/* Inline password row — appears immediately below clicked network */
+.pwd-inline-row { list-style: none; }
+.pwd-inline-box { padding: 10px 12px; background: var(--bg-2); border: 1px solid var(--accent); border-radius: 6px; display: flex; flex-direction: column; gap: 8px; }
+.pwd-inline-box label { font-size: 13px; color: var(--ink-faint); }
+.pwd-inline-fields { display: flex; gap: 6px; align-items: center; }
+.pwd-inline-input { flex: 1; padding: 7px 10px; background: var(--bg-3); border: 1px solid var(--rule); border-radius: 4px; color: var(--ink); font-size: 14px; }
+.pwd-inline-ok { padding: 7px 14px; }
+.pwd-inline-cancel { padding: 7px 10px; background: none; border: 1px solid var(--rule); border-radius: 4px; cursor: pointer; color: var(--ink-faint); }
+.pwd-inline-cancel:hover { border-color: var(--ink-faint); }
+.pwd-inline-status { font-size: 12px; color: var(--ink-faint); min-height: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>◆ TourBox Coach · Setup</h1>
+      <div class="tag">network gateway</div>
+    </div>
+    <a class="coach-link" id="coach-link" href="http://10.42.0.1:5173/">Open Coach app →</a>
+  </header>
+
+  <div id="flash"></div>
+
+  <div class="card">
+    <h2>Status</h2>
+    <div class="tiles" id="tiles">
+      <div class="tile"><div class="lbl"><span class="dot" style="background:var(--ink-faint)"></span>Upstream</div><div class="v">—</div><div class="v2">loading</div></div>
+      <div class="tile"><div class="lbl"><span class="dot" style="background:var(--ink-faint)"></span>Internet</div><div class="v">—</div><div class="v2">loading</div></div>
+      <div class="tile"><div class="lbl"><span class="dot" style="background:var(--ink-faint)"></span>AP</div><div class="v">—</div><div class="v2">loading</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="scan-head"><h2>Connect to WiFi</h2><button id="scan-btn">Scan networks</button></div>
+    <div id="networks"><div class="muted">Click <strong>Scan</strong> to see what's around.</div></div>
+    <div id="pwd-prompt"></div>
+  </div>
+
+  <div class="card">
+    <h2>Access Point</h2>
+    <div class="muted" style="margin-bottom:10px">Devices connect to this SSID. Changing it boots clients off.</div>
+    <form class="ap-form" id="ap-form">
+      <label><span>SSID</span><input type="text" id="ap-ssid" placeholder="TourBox-Coach" /></label>
+      <label><span>New password (≥8 chars, blank = keep)</span><input type="text" id="ap-pwd" placeholder="••••••••" /></label>
+      <div><button type="submit" class="primary" id="ap-save">Save AP changes</button></div>
+    </form>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const flashEl = $("flash");
+let lastStatus = null;
+let scanning = false;
+
+function flash(kind, msg) {
+  flashEl.innerHTML = "";
+  const d = document.createElement("div");
+  d.className = "flash flash-" + (kind === "error" ? "error" : "info");
+  d.textContent = (kind === "error" ? "⚠️ " : "✓ ") + msg;
+  flashEl.appendChild(d);
+  setTimeout(() => { if (flashEl.firstChild === d) flashEl.removeChild(d); }, 5000);
+}
+
+function tile(label, dotColor, primary, secondary) {
+  return `<div class="tile">
+    <div class="lbl"><span class="dot" style="background:${dotColor}"></span>${label}</div>
+    <div class="v">${primary}</div>
+    <div class="v2">${secondary}</div>
+  </div>`;
+}
+
+async function loadStatus() {
+  try {
+    const r = await fetch("/pi/status");
+    if (!r.ok) throw new Error("status " + r.status);
+    const s = await r.json();
+    lastStatus = s;
+    $("tiles").innerHTML =
+      tile("Upstream",
+           s.sta && s.sta.ssid ? "var(--good)" : "var(--bad)",
+           s.sta && s.sta.ssid ? s.sta.ssid : "—",
+           s.sta && s.sta.ip ? s.sta.ip : "not connected") +
+      tile("Internet",
+           s.internet && s.internet.online ? "var(--good)" : "var(--bad)",
+           s.internet && s.internet.online ? "online" : "offline",
+           (s.internet && s.internet.via) || "—") +
+      tile("AP",
+           s.ap && s.ap.active ? "var(--good)" : "var(--bad)",
+           (s.ap && s.ap.ssid) || "—",
+           (s.ap && s.ap.ip) || "inactive");
+
+    if (s.ap && s.ap.ssid && !$("ap-ssid").value) $("ap-ssid").value = s.ap.ssid;
+  } catch (e) {
+    flash("error", "status: " + e.message);
+  }
+}
+
+function bars(signal) {
+  const n = Math.max(1, Math.min(4, Math.ceil(signal / 25)));
+  let h = '<div class="bars" aria-label="' + signal + '%">';
+  for (let i = 1; i <= 4; i++) h += '<span class="' + (i <= n ? "on" : "") + '"></span>';
+  return h + "</div>";
+}
+
+async function scan() {
+  if (scanning) return;
+  scanning = true;
+  $("scan-btn").innerHTML = '<span class="spin"></span> scanning…';
+  $("scan-btn").disabled = true;
+  try {
+    const r = await fetch("/pi/wifi/scan");
+    if (!r.ok) throw new Error("scan " + r.status);
+    const j = await r.json();
+    const list = j.networks || [];
+    if (list.length === 0) {
+      $("networks").innerHTML = '<div class="muted">no networks found</div>';
+    } else {
+      $("networks").innerHTML =
+        '<ul class="net-list">' +
+        list.map((n) => `
+          <li class="net-row${n.in_use ? " connected" : ""}">
+            ${bars(n.signal)}
+            <div class="net-meta">
+              <div class="net-name">
+                ${escapeHtml(n.ssid)}
+                <span class="net-band${n.band === "5GHz" ? " band-5g" : " band-24g"}">${n.band || ""}</span>
+                ${n.in_use ? '<span class="in-use">connected</span>' : ""}
+              </div>
+              <div class="net-sub">${n.security || "open"} · ${n.signal}%</div>
+              ${n.ap_channel_warning && !n.in_use ? '<div class="net-warn">⚠ 5GHz — AP will also move to 5GHz. Devices that need 2.4GHz may drop from hotspot.</div>' : ""}
+            </div>
+            <button data-ssid="${escapeAttr(n.ssid)}" data-sec="${escapeAttr(n.security || "open")}" class="net-connect">${n.in_use ? "Reconnect" : "Connect"}</button>
+          </li>`).join("") +
+        "</ul>";
+      document.querySelectorAll(".net-connect").forEach((b) => {
+        b.addEventListener("click", () => connectFlow(b.dataset.ssid, b.dataset.sec, b));
+      });
+    }
+  } catch (e) {
+    flash("error", e.message);
+  } finally {
+    scanning = false;
+    $("scan-btn").innerHTML = "Scan networks";
+    $("scan-btn").disabled = false;
+  }
+}
+
+function escapeHtml(s) { return String(s).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+function escapeAttr(s) { return String(s).replace(/"/g, "&quot;"); }
+
+function removePwdInline() {
+  document.querySelectorAll(".pwd-inline-row").forEach(el => el.remove());
+}
+
+function connectFlow(ssid, security, btn) {
+  removePwdInline();
+  if (!security || security === "open" || security === "--") {
+    doConnect(ssid, null, btn);
+    return;
+  }
+  // Inject password form directly below the clicked network row
+  const li = btn.closest("li.net-row");
+  const pwdLi = document.createElement("li");
+  pwdLi.className = "pwd-inline-row";
+  pwdLi.innerHTML = `
+    <div class="pwd-inline-box">
+      <label>Password for <strong>${escapeHtml(ssid)}</strong></label>
+      <div class="pwd-inline-fields">
+        <input type="password" class="pwd-inline-input" placeholder="WiFi password" autocomplete="current-password" />
+        <button class="primary pwd-inline-ok">Connect</button>
+        <button class="pwd-inline-cancel">✕</button>
+      </div>
+      <div class="pwd-inline-status"></div>
+    </div>`;
+  li.after(pwdLi);
+  const inp = pwdLi.querySelector(".pwd-inline-input");
+  inp.focus();
+  pwdLi.querySelector(".pwd-inline-cancel").addEventListener("click", removePwdInline);
+  pwdLi.querySelector(".pwd-inline-ok").addEventListener("click", () => doConnect(ssid, inp.value, btn, pwdLi));
+  inp.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") doConnect(ssid, inp.value, btn, pwdLi);
+    if (e.key === "Escape") removePwdInline();
+  });
+}
+
+async function doConnect(ssid, password, btn, pwdLi) {
+  const statusEl = pwdLi ? pwdLi.querySelector(".pwd-inline-status") : $("pwd-prompt");
+  if (statusEl) statusEl.innerHTML = '<span class="spin"></span> connecting…';
+  if (btn) btn.disabled = true;
+  try {
+    const r = await fetch("/pi/wifi/connect", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ssid, password }),
+    });
+    const j = await r.json();
+    removePwdInline();
+    if (!r.ok || !j.connected) {
+      flash("error", j.detail || j.error || ("connect failed for " + ssid));
+    } else if (j.connected && !j.ip) {
+      flash("warn", "Connected to " + ssid + " but no IP yet. " + (j.warning || "Try refreshing."));
+      await loadStatus();
+    } else {
+      flash("info", "Connected to " + ssid + (j.ip ? " · IP: " + j.ip : "") + ".");
+      await loadStatus();
+    }
+  } catch (e) {
+    removePwdInline();
+    flash("error", e.message);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+$("scan-btn").addEventListener("click", scan);
+$("ap-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const ssid = $("ap-ssid").value.trim();
+  const password = $("ap-pwd").value;
+  if (!ssid && !password) return;
+  if (password && password.length < 8) { flash("error", "WPA2 password must be ≥ 8 chars"); return; }
+  $("ap-save").disabled = true;
+  $("ap-save").innerHTML = '<span class="spin"></span> updating…';
+  try {
+    const r = await fetch("/pi/ap", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ssid: ssid || null, password: password || null }),
+    });
+    if (!r.ok) {
+      const j = await r.json().catch(() => ({}));
+      throw new Error(j.detail || ("HTTP " + r.status));
+    }
+    flash("info", "AP updated — reconnect your device with the new credentials.");
+    $("ap-pwd").value = "";
+    await loadStatus();
+  } catch (e) {
+    flash("error", e.message);
+  } finally {
+    $("ap-save").disabled = false;
+    $("ap-save").innerHTML = "Save AP changes";
+  }
+});
+
+// Make the Coach link prefer the host the user is already on (so when
+// reached via captive popup at 10.42.0.1, the link points there too).
+(function () {
+  const host = window.location.hostname;
+  if (host && host !== "127.0.0.1" && host !== "localhost") {
+    $("coach-link").href = "http://" + host + ":5173/";
+  }
+})();
+
+// Pull the current AP SSID + password so the form reflects what's live
+// (rather than asking the user to remember).
+async function loadApDetails() {
+  try {
+    const r = await fetch("/pi/ap");
+    if (!r.ok) return;
+    const ap = await r.json();
+    if (ap.ssid) $("ap-ssid").value = ap.ssid;
+    if (ap.password) $("ap-pwd").value = ap.password;
+  } catch { /* ignore — dashboard still works without prefill */ }
+}
+
+// Initial load + slow poll.
+loadApDetails();
+loadStatus();
+setInterval(loadStatus, 8000);
+</script>
+</body>
+</html>

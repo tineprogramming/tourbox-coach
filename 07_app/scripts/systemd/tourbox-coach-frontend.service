@@ -1,0 +1,25 @@
+[Unit]
+Description=TourBox Coach Frontend (Vite dev server)
+After=network-online.target tourbox-coach.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=tourbox
+Group=tourbox
+WorkingDirectory=/home/tourbox/tourbox-coach/frontend
+# `npm run dev` invokes vite. We use the npm CLI directly so we don't have
+# to hardcode the per-machine path of the vite binary.
+ExecStart=/usr/bin/npm run dev
+Restart=on-failure
+RestartSec=5
+# Vite forks worker processes; KillMode=control-group ensures they all die.
+KillMode=control-group
+KillSignal=SIGTERM
+TimeoutStopSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=tourbox-frontend
+
+[Install]
+WantedBy=multi-user.target

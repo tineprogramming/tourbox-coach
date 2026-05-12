@@ -1,0 +1,32 @@
+[Unit]
+Description=TourBox Coach hotspot (ap0 virtual interface + NM activate)
+# Run after NetworkManager has brought wlan0 STA up, otherwise the Pi 5
+# BCM43455 driver won't let us add a virtual AP interface bound to the
+# same wiphy.
+After=NetworkManager.service network-online.target
+Wants=network-online.target
+Requires=NetworkManager.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# Idempotent ap0 creation: skip if it already exists, else create + bring up.
+ExecStartPre=/bin/sh -c '/usr/sbin/iw dev ap0 info >/dev/null 2>&1 || /usr/sbin/iw dev wlan0 interface add ap0 type __ap'
+ExecStartPre=/sbin/ip link set ap0 up
+# Wait until NM sees ap0 as available before trying to activate.
+ExecStartPre=/bin/sh -c 'for i in 1 2 3 4 5 6 7 8 9 10; do nmcli -t -f DEVICE,STATE device | grep -q "^ap0:" && exit 0; sleep 1; done; exit 0'
+ExecStart=/usr/bin/nmcli connection up tourbox-ap
+
+# Tear down any old captive-portal DNAT table from earlier setups. The
+# setup gateway now binds port 80 directly (see tourbox-coach-setup.service)
+# so no redirect rule is needed any more — clients reach the dashboard at
+# http://10.42.0.1/ natively.
+ExecStartPost=/bin/sh -c '/usr/sbin/nft delete table ip captive 2>/dev/null || true'
+
+ExecStop=/usr/bin/nmcli connection down tourbox-ap
+# Leave ap0 in place on stop. Recreating ap0 races with NM on restart and
+# produces "no suitable device" errors. The interface is harmless when idle;
+# ExecStart's idempotent StartPre re-applies as needed.
+
+[Install]
+WantedBy=multi-user.target

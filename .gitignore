@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+.vite/
+*.local
+
+# Runtime data
+sessions/
+*.log
+*.jsonl
+
+# Secrets — NEVER COMMIT
+.env
+*.env
+*.pem
+*.key
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/settings.json
+*.swp
+
+# Pi build artifacts
+setup_static_old/
+
+# Claude internal
+.claude/
+
+# Large binaries
+*.zip
+*.pptx
+*.pdf
+*.docx
+
+# Node package lock (use yarn.lock if needed)
+# package-lock.json  # keep this for reproducible builds

@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>两周 MVP 功能决策备忘录 · DrawCopilotLab</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #161a22;
+    --panel-2: #1d2230;
+    --ink: #e7ecf3;
+    --ink-dim: #aab3c2;
+    --accent: #ff7a5c;
+    --accent-2: #22d3ee;
+    --good: #34d399;
+    --warn: #fbbf24;
+    --bad: #f87171;
+    --rule: #2a3142;
+    --code-bg: #0b0d12;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+      --panel-2: #f1f3f8;
+      --ink: #0f1115;
+      --ink-dim: #4a5568;
+      --accent: #d94d2b;
+      --accent-2: #0ea5b7;
+      --good: #047857;
+      --warn: #b45309;
+      --bad: #b91c1c;
+      --rule: #e2e8f0;
+      --code-bg: #0f172a;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 56px 28px 96px; }
+  header.hero {
+    background: linear-gradient(135deg, rgba(255,122,92,.18), rgba(34,211,238,.10));
+    border: 1px solid var(--rule);
+    border-radius: 20px;
+    padding: 36px 36px 32px;
+    margin-bottom: 36px;
+    position: relative; overflow: hidden;
+  }
+  header.hero::after {
+    content: ""; position: absolute; right: -80px; top: -80px;
+    width: 280px; height: 280px;
+    background: radial-gradient(closest-side, rgba(255,122,92,.32), transparent);
+    filter: blur(20px); pointer-events: none;
+  }
+  .eyebrow {
+    text-transform: uppercase; letter-spacing: .14em; font-size: 12px;
+    color: var(--ink-dim); margin-bottom: 8px;
+  }
+  h1 { font-size: 36px; line-height: 1.25; margin: 0 0 8px; letter-spacing: -0.01em; }
+  h1 .accent { color: var(--accent); }
+  .tagline { color: var(--ink-dim); font-size: 17px; margin: 0 0 18px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px;
+    background: var(--panel-2);
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    font-size: 12.5px; color: var(--ink-dim);
+  }
+  .pill.good   { color: var(--good); border-color: rgba(52,211,153,.3); }
+  .pill.warn   { color: var(--warn); border-color: rgba(251,191,36,.3); }
+  .pill.accent { color: var(--accent); border-color: rgba(255,122,92,.45); }
+
+  h2 {
+    margin: 48px 0 14px; font-size: 26px; letter-spacing: -0.01em;
+    border-bottom: 1px solid var(--rule); padding-bottom: 10px;
+  }
+  h3 { font-size: 18px; margin-top: 26px; }
+  h4 { font-size: 14px; color: var(--ink-dim); letter-spacing: .04em; margin-top: 22px; }
+  p, li { color: var(--ink); }
+  a { color: var(--accent-2); text-decoration: none; border-bottom: 1px dotted rgba(34,211,238,.4); }
+  a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  code, pre { font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace; }
+  code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; font-size: 13px; }
+  pre {
+    background: var(--code-bg); color: #e7ecf3;
+    padding: 16px 18px; border-radius: 12px; overflow-x: auto;
+    font-size: 12.5px; line-height: 1.55;
+    border: 1px solid var(--rule);
+  }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    margin: 18px 0; padding: 6px 16px;
+    color: var(--ink-dim);
+    background: rgba(255,122,92,.06);
+    border-radius: 0 10px 10px 0;
+  }
+  table {
+    width: 100%; border-collapse: collapse; margin: 14px 0 8px;
+    font-size: 14px; background: var(--panel);
+    border: 1px solid var(--rule); border-radius: 12px; overflow: hidden;
+  }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { background: var(--panel-2); color: var(--ink-dim); font-weight: 600; letter-spacing: .04em; font-size: 12.5px; }
+  tr:last-child td { border-bottom: 0; }
+  td.green { color: var(--good); font-weight: 600; }
+  td.amber { color: var(--warn); font-weight: 600; }
+  td.gray  { color: var(--ink-dim); }
+
+  .toc {
+    background: var(--panel); border: 1px solid var(--rule);
+    border-radius: 14px; padding: 16px 22px;
+    margin-bottom: 32px; columns: 2; column-gap: 28px;
+  }
+  .toc ol { margin: 0; padding-left: 22px; }
+  .toc li { padding: 2px 0; break-inside: avoid; }
+
+  .feat-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-top: 14px; }
+  .feat {
+    background: var(--panel); border: 1px solid var(--rule);
+    border-left: 4px solid var(--accent);
+    border-radius: 12px; padding: 16px 18px;
+  }
+  .feat.f1 { border-left-color: var(--accent); }
+  .feat.f2 { border-left-color: var(--accent-2); }
+  .feat.f3 { border-left-color: var(--good); }
+  .feat.f4 { border-left-color: var(--warn); }
+  .feat h3 { margin: 0 0 4px; font-size: 16px; }
+  .feat .label { font-size: 11px; letter-spacing: .04em; color: var(--ink-dim); margin-bottom: 8px; }
+
+  .checks { list-style: none; padding: 0; }
+  .checks li {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .checks .box {
+    width: 18px; height: 18px;
+    border: 1.5px solid var(--accent);
+    border-radius: 4px; flex-shrink: 0;
+    margin-top: 3px;
+  }
+  footer {
+    margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--rule);
+    color: var(--ink-dim); font-size: 13px;
+  }
+  @media (max-width: 720px) {
+    .toc { columns: 1; } h1 { font-size: 28px; }
+    .wrap { padding: 28px 16px 64px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">功能决策备忘录 · DrawCopilotLab · 2026 年 5 月</div>
+  <h1>两周 MVP — <span class="accent">决定要交付什么,决定要推迟什么</span></h1>
+  <p class="tagline">一个聚焦的单用户 Demo:既能打动客户 CEO,又能为长期数据飞轮埋下种子,同时避免把整个 Sprint 押注到 R&amp;D 上。</p>
+  <div class="meta">
+    <span class="pill accent">交付节点:第 14 天向客户演示</span>
+    <span class="pill good">推荐范围:三个核心功能(F1 + F2 + F3)</span>
+    <span class="pill warn">明确推迟:基于压感/倾角/时间的下一笔预测新模型</span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="目录">
+  <ol>
+    <li><a href="#summary">摘要 — 推荐范围</a></li>
+    <li><a href="#problem">决策问题</a></li>
+    <li><a href="#features">推荐功能集</a></li>
+    <li><a href="#plan">逐日排期</a></li>
+    <li><a href="#stack">技术栈</a></li>
+    <li><a href="#defer">为什么两周内不做新模型</a></li>
+    <li><a href="#risks">两周窗口的风险</a></li>
+    <li><a href="#asks">向客户提出的开放问题</a></li>
+    <li><a href="#decisions">需要的决策签字</a></li>
+    <li><a href="#mapping">与客户路线图的对应关系</a></li>
+  </ol>
+</nav>
+
+<section id="summary">
+<h2>摘要 — 推荐范围</h2>
+<p>构建一个<strong>面向单用户的 Web 端"DrawCopilot 演示工作台"</strong>,基于客户自有数位屏硬件,实现以下三件事:</p>
+
+<div class="feat-grid">
+  <div class="feat f1">
+    <div class="label">F1 · CEO 最爱的演示亮点</div>
+    <h3>"一键润色我的画" — Sketch-to-Image 风格化</h3>
+    <p>用户随手涂鸦 → AI 返回 4 种风格、共 4 个润色版本。<em>这就是 CEO 想看的"AutoDraw + 三星 Gemini"瞬间。</em></p>
+  </div>
+  <div class="feat f2">
+    <div class="label">F2 · 真正的战略楔子</div>
+    <h3>笔触过程记录器 + UIM 标准导出</h3>
+    <p>以全保真度采集每一笔事件 <code>(x, y, p, tilt_x, tilt_y, t)</code>,同时导出 JSONL 与 Wacom Universal Ink Model。<strong>数据飞轮的"种子粮"。</strong></p>
+  </div>
+  <div class="feat f3">
+    <div class="label">F3 · 不依赖 ML 的过程感知功能</div>
+    <h3>笔触回放 + 透视 / 对称辅助</h3>
+    <p>纯几何计算实现的功能,证明<em>今天</em>就能让丰富的笔数据立刻产出可见价值——不需要任何新模型。</p>
+  </div>
+  <div class="feat f4">
+    <div class="label">F4 · 仅作余量目标</div>
+    <h3>Sketch-RNN 幽灵笔触(开箱即用)</h3>
+    <p>仅当 F1–F3 在第 9 天前全部稳定后才上线。用于验证 Copilot 式交互手感,演示时必须坦白说明:这是 2017 年的公开模型,不是"我们专属"的。</p>
+  </div>
+</div>
+
+<p style="margin-top:18px"><strong>明确推迟:</strong>客户 PPT 里描述的、基于压感/倾角/时间的"下一笔预测"<em>新模型</em>。其 R&amp;D 风险无法塞进两周窗口。详见<a href="#defer">第 5 节</a>。</p>
+</section>
+
+<section id="problem">
+<h2>1 · 决策问题</h2>
+<p>两周的范围被三股力同时拉扯:</p>
+<table>
+<thead><tr><th>压力</th><th>来源</th><th>含义</th></tr></thead>
+<tbody>
+<tr><td>快速拿出能打动 CEO 的 Demo</td><td>客户 CEO 喜欢 <strong>AutoDraw</strong> 与三星 Galaxy AI 的 <strong>Drawing Assist / Sketch-to-Image</strong>,并明确告诉我们<em>"这种东西可以很快做出来。"</em></td><td>使用现成的图像生成 API(ControlNet-Scribble / SDXL / fal.ai / Replicate / Azure OpenAI Image),数日可上线。</td></tr>
+<tr><td>证明真正的战略楔子</td><td>客户 PPT 第 4、7、12 页:护城河是<em>笔触过程数据</em>,不是被润色后的图片。他们的核心价值是数据入口——以 200 Hz 采集的 <code>(x, y, p, tilt, t)</code> 加完整会话上下文。</td><td>必须把数据管线本身做出来,不能只是去调别人家的图像生成 API。</td></tr>
+<tr><td>尊重团队对 R&amp;D 的现实判断</td><td>产品负责人备忘:<em>"R&amp;D 周期更长;新增压感/时间/倾角维度的模型需要反复试错……先做一个 1–2 个月内能上线的东西,新模型放到长期。"</em></td><td>推迟新的序列建模 ML 工作。两周窗口内只用现成模型。</td></tr>
+</tbody>
+</table>
+<blockquote>MVP 必须在 14 天内同时满足这三股力。推荐范围的解法是<strong>把"对外可见的演示"与"对内的战略基础设施"解耦</strong>,同时确保战略基础设施本身至少能产出一个可见的 Demo(透视辅助 + 回放)。</blockquote>
+</section>
+
+<section id="features">
+<h2>2 · 推荐功能集</h2>
+
+<h3>F1 — "一键润色我的画"(CEO 演示亮点)</h3>
+<ul>
+  <li><strong>用户体验:</strong>在画布上随手画 → 点击<em>润色</em> → 弹出 2–4 种风格(水彩、动漫/漫画、概念设计、铅笔速写)。每种风格出 1–2 个变体,用户挑一个变体作为新图层留下。</li>
+  <li><strong>实现方式:</strong>调用现成的、以涂鸦为条件的图像生成模型——通过 fal.ai 或 Replicate 接 ControlNet-Scribble / SDXL-Turbo;备选 Azure OpenAI Image。仅服务端实现。</li>
+  <li><strong>为什么两周内安全:</strong>零新增 ML 工作。集成约 1 天,风格预设的 UI 约 2 天。</li>
+  <li><strong>注意事项:</strong>这是名单里差异化最弱的一项——现在每部消费级手机都有了。我们要把它<em>定位为"对演示友好的外衣"</em>;真正的护城河是 F2。</li>
+</ul>
+
+<h3>F2 — 笔触过程记录器 + 标准化导出(战略楔子)</h3>
+<ul>
+  <li><strong>用户体验:</strong>角落里一个小小的"录制中"指示器。会话结束后出现<em>下载会话日志</em>按钮。</li>
+  <li><strong>底层在做什么:</strong>每一个 PointerEvent 都被写入有类型的事件流——<code>pressure</code>、<code>tiltX/Y</code>、由此推导的 <code>azimuth(方位角)</code>与 <code>瞬时速度</code>,加上会话上下文(图层 id、工具 id、撤销/重做 id;若用户授权还可标注"意图阶段"标签)。</li>
+  <li><strong>两种导出格式:</strong>
+    <ul>
+      <li><code>session.jsonl</code> — 我们自己的逐行 JSON 格式,便于 ML 直接吃。</li>
+      <li><code>session.uim</code> — Wacom <strong>Universal Ink Model</strong>(Protocol Buffers v3 + RIFF)。直接呼应客户 PPT 第 9 页的<em>"扩展 WILL / Wintab / HID"</em>。使用 Wacom 已公开的 UIM SDK,不必自创格式。</li>
+    </ul>
+  </li>
+  <li><strong>为什么两周内安全:</strong>浏览器的 PointerEvents API 已经把所有字段端给我们了,我们只需把它们落盘;UIM SDK 替我们做二进制序列化。</li>
+  <li><strong>"伪装中的护城河":</strong>每一个被录制下的会话,都是<em>我们自己拥有</em>的训练数据。即使长期模型要做 6 个月,等到我们要训练时,也已经积累了 6 个月的纯净一手数据。</li>
+</ul>
+
+<h3>F3 — 笔触回放 + 透视/对称辅助(过程感知,无需 ML)</h3>
+<ul>
+  <li><strong>笔触回放:</strong>拖动时间轴;画布按原速(或 4 倍)逐笔重绘。Demo 时用来证明<em>"我们拿到的是整个过程,不只是最终那张图。"</em></li>
+  <li><strong>透视网格:</strong>1/2/3 点透视叠加层;笔的倾角自动对齐当前的灭线方向。<em>立刻就用上了 tilt 数据——纯几何,无模型。</em></li>
+  <li><strong>对称镜像:</strong>垂直/径向镜像。镜像侧的笔触会以<em>正确的压感与倾角</em>反射——一个不显眼但很能展示"丰富数据为什么有用"的细节。</li>
+  <li><strong>为什么三件事一起做:</strong>它们共同证明"丰富的笔数据 → 可见价值"在<em>没有新模型</em>的前提下也成立。三者都对应客户 PPT 第 10 页:<em>"驱动级智能笔——透视/对称辅助;可教学/可复盘"</em>。</li>
+</ul>
+
+<h3>F4 — 仅作余量目标:开箱即用的下一笔幽灵</h3>
+<p>通过 TF.js 接入 <strong>Sketch-RNN</strong>(Magenta),用功能开关隐藏。仅当 F1–F3 在第 9 天前都达标才上线。Demo 时必须诚实说明:这是 2017 年公开的、在 QuickDraw 上训练的模型——<em>不是</em>我们将来基于客户的压感/倾角数据所要构建的那个模型。它的工作是验证 UX,不是验证 IP。</p>
+
+<h4>本次两周 MVP 明确不做的内容</h4>
+<table>
+<thead><tr><th>不做的内容</th><th>原因</th></tr></thead>
+<tbody>
+<tr><td>多人协作 / 共享房间(Drawly 风格)</td><td>不在 CEO 的关注列表;CRDT / WebSocket 复杂度会吞掉整个 Sprint。</td></tr>
+<tr><td>语音陪伴(Realtime API)</td><td>客户没有提;在第一天的成本讨论里就会爆预算。</td></tr>
+<tr><td>游戏化课程(ArtWorkout 风格)</td><td>大量内容 + 产品工作量,客户也没要求。</td></tr>
+<tr><td>新的压感/倾角/时间下一笔预测模型</td><td>是真正的 R&amp;D —— 而它需要的训练数据,正是 F2 上线后才开始产生。</td></tr>
+<tr><td>iPad / 移动端原生壳</td><td>先做 Web Demo;客户的硬件是 Windows 端的数位屏。</td></tr>
+<tr><td>账号、付费、分享</td><td>Demo 在一台预装客户硬件的笔记本上本地运行;Local-First 足矣。</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="plan">
+<h2>3 · 逐日排期(10 个工作日 / 14 个自然日)</h2>
+<p><em>假设小型团队配比:2 名前端、1 名后端/胶水、1 名 ML/集成、1 名设计师(兼职)。如果是单人或结对开发,数量需重新评估;请在第 0 天提出。</em></p>
+<table>
+<thead><tr><th>日</th><th>工作流 A — 画布与记录器</th><th>工作流 B — 润色 API 与界面</th><th>工作流 C — 回放与辅助</th></tr></thead>
+<tbody>
+<tr><td><strong>D1</strong></td><td>锁定范围、建仓、CI;在开发机上把客户硬件接入。<strong>验证:在客户驱动下,<code>PointerEvents</code> 是否真的暴露 <code>pressure</code> 与 <code>tiltX/Y</code>——这是第 1 天必须先排掉的头号风险。</strong></td><td>选型实验:在 fal.ai、Replicate、Azure OpenAI Image 三家中挑选,用 20 张样图测延迟与成本。</td><td>回放滑块、透视叠加、对称镜像的线框图。</td></tr>
+<tr><td><strong>D2</strong></td><td>矢量画布(Konva + perfect-freehand);笔事件流架构。</td><td>锁定 4 种风格预设;Prompt 模板。</td><td>透视网格(1/2/3 点)与对称变换的数学。</td></tr>
+<tr><td><strong>D3</strong></td><td>本地笔触日志 → 落盘 JSONL;基础校验查看器。</td><td>"涂鸦 → 润色图"端到端首通。</td><td>回放滑块 MVP(只支持向前)。</td></tr>
+<tr><td><strong>D4</strong></td><td>集成 Wacom UIM SDK,导出 <code>.uim</code> 文件。</td><td>UI:风格选择网格、生成按钮、结果灯箱。</td><td>透视叠加层在画布上渲染。</td></tr>
+<tr><td><strong>D5</strong></td><td>会话上下文:图层 id、工具 id、撤销/重做 id、意图阶段标签。</td><td>变体的拒绝/作为新图层接受流程。</td><td>对称镜像,确保镜像侧的压感与倾角正确反射。</td></tr>
+<tr><td><strong>D6</strong></td><td>记录器自身遥测:事件每秒数、日志大小、丢失事件。</td><td>风格 A/B 测试脚手架。</td><td>4 倍速回放 / 双向时间轴拖动。</td></tr>
+<tr><td><strong>D7</strong></td><td colspan="3"><strong>Sprint 中期内部 Demo</strong> —— 团队自己当画师画一小时,看记录器到底记了什么。补漏。</td></tr>
+<tr><td><strong>D8</strong></td><td>余量:Sketch-RNN 幽灵笔触(F4)藏在功能开关后,仅在 A/B/C 全绿时才接入。</td><td>根据 D7 的 Demo 反馈,微调风格 Prompt。</td><td>透视 + 对称的 UX 打磨。</td></tr>
+<tr><td><strong>D9</strong></td><td>Demo 数据集:5 段预录会话,导出为 <code>.uim</code>。</td><td>Demo 备份:4 张涂鸦 × 4 种风格预先缓存,以便离线回放。</td><td>Demo 用回放片段。</td></tr>
+<tr><td><strong>D10</strong></td><td>端到端冒烟 + 压力测试;为 Demo 准备遥测仪表板。</td><td>撰写 Demo 脚本。</td><td>缓冲 / 修 Bug。</td></tr>
+<tr><td>D11–D12</td><td colspan="3">缓冲日。第 12 天彩排。</td></tr>
+<tr><td>D13</td><td colspan="3">与内部相关方进行 Demo 排练。锁版。</td></tr>
+<tr><td><strong>D14</strong></td><td colspan="3"><strong>正式向客户演示。</strong></td></tr>
+</tbody>
+</table>
+<blockquote><strong>每日站会的纪律:</strong>每次站会都必须回答一个问题——<em>"记录器是否仍在以全保真度捕获每一个事件?"</em>这是唯一不可妥协的指标,因为它定义了我们到底有没有真的在采集"护城河数据"。</blockquote>
+</section>
+
+<section id="stack">
+<h2>4 · 技术栈 — 两周 Sprint 的保守选型</h2>
+<p>每一项决策都要"无聊",因为无聊的东西能按时上线。</p>
+<ul>
+  <li><strong>前端:</strong>Next.js 15 + TypeScript + Tailwind。画布:<strong>Konva.js + perfect-freehand</strong>(本期不选 tldraw —— 我们要对记录器钩子有完全的控制权,而且这次也不做多人协作)。</li>
+  <li><strong>笔输入采集:</strong>原生 <code>PointerEvents</code> API。第 1 天就要验证客户驱动是否真的填充了 <code>pressure</code>、<code>tiltX/Y</code>。Wacom 与 Huion 的驱动会;客户的不一定。</li>
+  <li><strong>笔触标准:</strong>使用 Wacom 已公开的 <strong>Universal Ink Model(UIM)</strong> SDK——既呼应客户 PPT 第 9 页"扩展 WILL / Wintab / HID"的主题,又不必自己发明格式。</li>
+  <li><strong>后端:</strong>FastAPI 部署在 Azure Container Apps。Demo 阶段会话用 SQLite(不上 Postgres——为两周项目折腾过头)。</li>
+  <li><strong>存储:</strong>Demo 机本地的 <code>./sessions/</code>;若 D9–D10 还有时间,可选接 Azure Blob。</li>
+  <li><strong>Sketch-to-Image 服务:</strong>首选 <strong>fal.ai</strong>(在我们之前的实测中,涂鸦条件模型的 p95 延迟最低);备选 <strong>Replicate</strong>;企业级备选 <strong>Azure OpenAI Image</strong>(合规友好,有助于讲好合作故事)。</li>
+  <li><strong>CI / 部署:</strong>GitHub Actions;Demo 当天在客户提供的笔记本上本地跑——演示流程不依赖云端。</li>
+  <li><strong>可观测性:</strong>结构化日志 + 一页式仪表板,跟踪笔触采集速率、润色 API 延迟、模型调用成本。</li>
+</ul>
+<blockquote><strong>第二周不引入新框架。</strong>第 1 天选了什么,就坚持到底。</blockquote>
+</section>
+
+<section id="defer">
+<h2>5 · 为什么两周内不做新的下一笔预测模型</h2>
+<p>这一节单独成段,因为它最容易被客户质疑。客户 PPT(第 4、7、8、10 页)描述的模型,要吃 <code>(x, y, pressure, tilt, time)</code> 序列、并以"画师本人风格"预测下一笔。在两周内做出来不现实,具体有五个理由:</p>
+<ol>
+  <li><strong>目前根本没有带标签的训练数据。</strong>这次合作的全部前提就是"市面上没人有过程数据"。一手数据要等到 F2 上线那天才开始产生。要做<em>任何</em>个性化模型,先得积累几周以上的录制。</li>
+  <li><strong>公开的笔触模型(Sketch-RNN、StrokeFusion、SwiftSketch)都不吃压感与倾角。</strong>它们都把笔触当作 <code>(x, y, pen_state)</code> 三元组。要给它们的架构加 3 个新维度,本质上是研究项目——序列模型的实证工作每个消融实验通常都得几周。</li>
+  <li><strong>个性化在我们能"宣称它有效"之前,先得有评估流水线。</strong>两周根本无法同时交出评估流水线 + 模型 + UX。</li>
+  <li><strong>端到端延迟预算非常紧。</strong>客户 PPT 第 7 页承诺 &lt;10 ms 反馈。哪怕一个小型 Transformer 在 200 Hz 采样下也很难压进这个数;我们需要 NPU 级推理与量化。两周内做不到。</li>
+  <li><strong>"反复试错"恰恰是产品备忘录里点名要避免的事。</strong>把 Sprint 算力投在一个不一定产出可运行成果的研究赌注上,是这两周最糟糕的用法。</li>
+</ol>
+<p><strong>我们的替代方案:</strong>把 F2(记录器 + UIM 导出)定位为客户自己 PPT 第 13 页的 <strong>Phase 0</strong>:<em>"联合定义标准 & 采集规范"</em>。我们事实上是在为第 13 页 Phase 0 所要的那件交付物买单——同时还给 CEO 准备了一个用现成图像生成"先把模型缺口糊起来"的演示。</p>
+<table>
+<thead><tr><th>时间</th><th>内容</th></tr></thead>
+<tbody>
+<tr><td>第 3–6 周(MVP 后)</td><td>招募约 30 名画师上记录器。积累约 200 小时、带"意图阶段"标签的过程数据。</td></tr>
+<tr><td>第 4–8 周</td><td>第一次模型 Spike:在 <code>(x, y, p, tx, ty, dt)</code> token 流上跑 Transformer。评估下一笔 top-k 准确率,以及"对未见用户"的少样本适配效果。</td></tr>
+<tr><td>第 3–6 个月</td><td>客户路线图里真正的 <em>Phase 1</em>:把"笔迹预测 + 透视辅助"产品化上线。</td></tr>
+</tbody>
+</table>
+<blockquote>这个排期既兑现了团队"R&amp;D 周期更长"的现实判断,又落在客户 PPT 第 13 页所规定的<em>"Phase 1(3–6 个月)"</em>窗口里——也就是说,我们没有拖延他们的计划,我们只是<em>在 Phase 0 里把前 14 天重新排了顺序</em>。</blockquote>
+</section>
+
+<section id="risks">
+<h2>6 · 两周窗口的风险</h2>
+<table>
+<thead><tr><th>风险</th><th>可能性</th><th>缓解措施</th></tr></thead>
+<tbody>
+<tr><td>客户的笔驱动没有把 <code>tiltX/Y</code> 暴露给浏览器</td><td class="amber">中</td><td>第 1 天就在真实硬件上验证。回退方案 A:写一个原生小助手程序(Electron / Win32),读取 Wintab 后通过 WebSocket 转发。回退方案 B:优雅降级——记录已有字段,在 <code>.uim</code> 中把 tilt 标为 <code>null</code>。</td></tr>
+<tr><td>Demo 当天 Sketch-to-Image 服务挂掉</td><td class="gray">低–中</td><td>第 9 天预先缓存 4 张涂鸦 × 4 种风格的结果。Demo 时可平滑回退到缓存回放,观众觉察不出。</td></tr>
+<tr><td>Demo 机器上的 <code>PointerEvents</code> 采样率过低(&lt;60 Hz)</td><td class="amber">中</td><td>使用 <code>getCoalescedEvents()</code> 取回子帧采样(Wacom 驱动据此可达 200+ Hz)。第 1 天验证。</td></tr>
+<tr><td>无节制的图像 API 调用导致成本飙升</td><td class="gray">低</td><td>每会话上限 + 每日金额上限 + 后台一键关停开关。</td></tr>
+<tr><td>范围蔓延 ——"能不能再加多人/语音/课程?"</td><td class="amber">高</td><td>就靠这份备忘录。第 0 天就拿到签字。</td></tr>
+<tr><td>预期错位 —— CEO 看完润色 Demo 后问"那我们的'下一笔预测'呢?"</td><td class="amber">高</td><td>Demo 脚本必须先讲 <strong>F3(透视/对称/回放)</strong>,明确点题:<em>"这就是凭你们的笔数据、不需要任何新模型,今天就能做到的事。"</em>然后再讲 F1 作为润色外壳。F4 仅在已上线时演示,并坦白说明它是公开模型,不是"你们专属"的。</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="asks">
+<h2>7 · 向客户提出的开放问题(在第 0 天提出)</h2>
+<ol>
+  <li>Demo 应面向哪一个数位屏 SKU?确认操作系统(Windows?像 Wacom Bamboo 那样走 USB-HID?还是他们自家的驱动?),以及是否有 Linux/macOS 版本。</li>
+  <li>对未来的<strong>端侧推理运行时</strong>有偏好吗——ONNX Runtime、TensorRT、高通 SNPE、联发科 APU?这影响 Phase 1 的模型选型,但不影响两周 MVP。</li>
+  <li>他们的驱动团队能否给我们<strong>原始 HID 报文</strong>的访问权限(可能有更高采样率/额外字节),还是只能拿到 OS 层的 <code>(x, y, pressure, tilt)</code>?<em>这才是真正决定护城河深度的问题。</em></li>
+  <li>Demo 调用第三方图像生成 API(fal/Replicate/Azure OpenAI),还是必须自托管?这是合规驱动的决策,直接影响选型。</li>
+  <li>Demo 在哪一个品牌名下露脸——他们的、我们的,还是中立的"DrawCopilot Lab"?</li>
+</ol>
+</section>
+
+<section id="decisions">
+<h2>8 · 需要的决策签字</h2>
+<p>第 0 天之前,需要产品/管理层签字三项:</p>
+<ul class="checks">
+  <li><span class="box"></span><span><strong>范围</strong> —— 批准 F1 + F2 + F3 这一组合,并明确批准推迟"下一笔预测新模型"。</span></li>
+  <li><span class="box"></span><span><strong>供应商</strong> —— 批准 Sketch-to-Image 选型(推荐 <strong>fal.ai</strong>,Azure OpenAI 作为面向企业合规的备选)。</span></li>
+  <li><span class="box"></span><span><strong>Demo 叙事</strong> —— 批准脚本里<em>"护城河在我们刚刚开始记录的那批数据里,而不是 Demo 一上来调用的那个润色 API"</em>这一主线。<strong>这是最关键的一项叙事决策</strong>:它决定 CEO 离场时是被 AutoDraw(同质化)打动,还是被"未来 6 个月里只有他们能做出来的东西"(真正的合作论点)打动。</span></li>
+</ul>
+</section>
+
+<section id="mapping">
+<h2>附录 · 本 MVP 与客户 PPT 第 13 页路线图的对应</h2>
+<table>
+<thead><tr><th>客户阶段</th><th>客户原本的交付物</th><th>本两周 MVP 实际给到的</th></tr></thead>
+<tbody>
+<tr><td>Phase 0 — 联合标准</td><td>定义标准 + 采集规范</td><td class="green">完成。F2 提供 <code>.uim</code> 兼容记录器;同步产出规范文档;在书面层面扩展 WILL/Wintab。</td></tr>
+<tr><td>Phase 1 — 3–6 个月 MVP</td><td>笔迹预测 + 透视辅助</td><td class="amber">部分完成。透视 + 对称辅助今天即上线(无 ML);笔迹预测的前置准备工作于 MVP 之后启动,使用记录器产生的数据。</td></tr>
+<tr><td>Phase 2 — 6–12 个月 GA</td><td>过程回放 + 教学</td><td class="amber">部分完成。笔触回放今天就以 Demo 功能上线;产品化放到 Phase 2。</td></tr>
+<tr><td>Phase 3 — 12–18 个月 生态</td><td>SDK + 内容平台</td><td class="gray">超出本期范围。记录器格式将成为日后 SDK 的种子。</td></tr>
+</tbody>
+</table>
+<blockquote>两周 MVP = <strong>一份完整的 Phase 0 交付物 + 一段对 Phase 1–2 的"CEO 级预览片段"</strong>。这是一个我们能兑现的承诺。</blockquote>
+</section>
+
+<footer>两周 MVP 决策备忘录 · DrawCopilotLab · 编制于 2026 年 5 月,用于产品/工程立项签字。</footer>
+
+</div>
+</body>
+</html>

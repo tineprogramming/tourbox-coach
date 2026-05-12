@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DrawCopilotLab — 技术可行性研究报告</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #161a22;
+    --panel-2: #1d2230;
+    --ink: #e7ecf3;
+    --ink-dim: #aab3c2;
+    --accent: #7c5cff;
+    --accent-2: #22d3ee;
+    --good: #34d399;
+    --warn: #fbbf24;
+    --bad: #f87171;
+    --rule: #2a3142;
+    --code-bg: #0b0d12;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+      --panel-2: #f1f3f8;
+      --ink: #0f1115;
+      --ink-dim: #4a5568;
+      --accent: #5b3df5;
+      --accent-2: #0ea5b7;
+      --good: #047857;
+      --warn: #b45309;
+      --bad: #b91c1c;
+      --rule: #e2e8f0;
+      --code-bg: #0f172a;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 56px 28px 96px;
+  }
+  header.hero {
+    background: linear-gradient(135deg, rgba(124,92,255,.18), rgba(34,211,238,.12));
+    border: 1px solid var(--rule);
+    border-radius: 20px;
+    padding: 36px 36px 32px;
+    margin-bottom: 36px;
+    position: relative;
+    overflow: hidden;
+  }
+  header.hero::after {
+    content: "";
+    position: absolute; right: -80px; top: -80px;
+    width: 280px; height: 280px;
+    background: radial-gradient(closest-side, rgba(124,92,255,.35), transparent);
+    filter: blur(20px);
+    pointer-events: none;
+  }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    font-size: 12px;
+    color: var(--ink-dim);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-size: 38px;
+    line-height: 1.2;
+    margin: 0 0 8px;
+    letter-spacing: -0.01em;
+  }
+  h1 .accent { color: var(--accent); }
+  .tagline {
+    color: var(--ink-dim);
+    font-size: 17px;
+    margin: 0 0 18px;
+  }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;
+  }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px;
+    background: var(--panel-2);
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    font-size: 12.5px;
+    color: var(--ink-dim);
+  }
+  .pill.good   { color: var(--good); border-color: rgba(52,211,153,.3); }
+  .pill.warn   { color: var(--warn); border-color: rgba(251,191,36,.3); }
+  .pill.accent { color: var(--accent); border-color: rgba(124,92,255,.4); }
+
+  h2 {
+    margin: 48px 0 14px;
+    font-size: 26px;
+    letter-spacing: -0.01em;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 10px;
+  }
+  h3 { font-size: 19px; margin-top: 28px; }
+  h4 { font-size: 15px; color: var(--ink-dim); letter-spacing: .04em; margin-top: 22px; }
+  p, li { color: var(--ink); }
+  a { color: var(--accent-2); text-decoration: none; border-bottom: 1px dotted rgba(34,211,238,.4); }
+  a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  code, pre { font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace; }
+  code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; font-size: 13px; }
+  pre {
+    background: var(--code-bg);
+    color: #e7ecf3;
+    padding: 16px 18px;
+    border-radius: 12px;
+    overflow-x: auto;
+    font-size: 12.5px;
+    line-height: 1.55;
+    border: 1px solid var(--rule);
+  }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    margin: 18px 0;
+    padding: 6px 16px;
+    color: var(--ink-dim);
+    background: rgba(124,92,255,.06);
+    border-radius: 0 10px 10px 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 8px;
+    font-size: 14px;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  th {
+    background: var(--panel-2);
+    color: var(--ink-dim);
+    font-weight: 600;
+    letter-spacing: .04em;
+    font-size: 12.5px;
+  }
+  tr:last-child td { border-bottom: 0; }
+  td.sev-high  { color: var(--bad); font-weight: 600; }
+  td.sev-med   { color: var(--warn); font-weight: 600; }
+  td.sev-low   { color: var(--good); font-weight: 600; }
+  td.feasible-solid    { color: var(--good); font-weight: 600; }
+  td.feasible-feasible { color: var(--accent-2); font-weight: 600; }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+    margin-top: 16px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 18px 18px 16px;
+  }
+  .card h3 { margin: 0 0 6px; font-size: 17px; }
+  .card .src { font-size: 12px; color: var(--ink-dim); margin-bottom: 8px; }
+  .card p { margin: 6px 0; font-size: 14px; }
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-right: 6px;
+  }
+  .badge.copy { background: rgba(52,211,153,.15); color: var(--good); }
+  .badge.skip { background: rgba(248,113,113,.15); color: var(--bad); }
+
+  .phase-grid { display: grid; gap: 12px; margin-top: 12px; }
+  .phase {
+    background: var(--panel);
+    border-left: 4px solid var(--accent);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .phase.p0 { border-left-color: var(--accent-2); }
+  .phase.p1 { border-left-color: var(--accent); }
+  .phase.p2 { border-left-color: #f472b6; }
+  .phase.p3 { border-left-color: var(--warn); }
+  .phase.p4 { border-left-color: var(--good); }
+  .phase h3 { margin: 0 0 4px; font-size: 16px; }
+  .phase .when { font-size: 12px; color: var(--ink-dim); margin-bottom: 6px; }
+
+  .toc {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 16px 22px;
+    margin-bottom: 32px;
+    columns: 2;
+    column-gap: 28px;
+  }
+  .toc ol { margin: 0; padding-left: 22px; }
+  .toc li { padding: 2px 0; break-inside: avoid; }
+
+  .latency {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px 18px;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 14px 18px;
+    max-width: 580px;
+    font-size: 14px;
+  }
+  .latency .total { font-weight: 700; color: var(--accent); border-top: 1px solid var(--rule); padding-top: 8px; }
+
+  footer {
+    margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--rule);
+    color: var(--ink-dim); font-size: 13px;
+  }
+
+  @media (max-width: 720px) {
+    .toc { columns: 1; }
+    h1 { font-size: 28px; }
+    .wrap { padding: 28px 16px 64px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">技术可行性研究报告 · 2026 年 5 月</div>
+  <h1>DrawCopilotLab — <span class="accent">为你的画板而生的 Copilot</span></h1>
+  <p class="tagline">实时协作画布 + Copilot 式笔触自动补全 + 多邻国式游戏化课程,围绕一个能"陪你一起画"的 AI 伙伴展开。</p>
+  <div class="meta">
+    <span class="pill good">结论:在当前技术下完全可行</span>
+    <span class="pill accent">MVP 预计 4–5 个月</span>
+    <span class="pill warn">核心风险:笔触建议端到端延迟需 &lt; 150 毫秒</span>
+    <span class="pill">项目代号:DrawCopilotLab</span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="目录">
+  <ol>
+    <li><a href="#summary">执行摘要</a></li>
+    <li><a href="#refs">参考产品分析</a></li>
+    <li><a href="#matrix">核心功能可行性矩阵</a></li>
+    <li><a href="#sow">工作范围(SoW)</a></li>
+    <li><a href="#stack">推荐技术栈</a></li>
+    <li><a href="#arch">整体架构</a></li>
+    <li><a href="#risks">风险与缓解措施</a></li>
+    <li><a href="#brain">产品创意脑暴</a></li>
+    <li><a href="#open">待团队决策的开放问题</a></li>
+    <li><a href="#rec">最终建议</a></li>
+  </ol>
+</nav>
+
+<section id="summary">
+<h2>一 · 执行摘要</h2>
+<p>本报告的所有单点能力,在业界都已经有成熟的产品级实现。真正的创新之处在于<strong>三者的组合</strong>:实时协作画布、Copilot 式笔触自动补全、多邻国式游戏化课程,再加上一个能"陪用户一起画"的 AI 伙伴。</p>
+
+<table>
+<thead><tr><th>问题</th><th>简短回答</th></tr></thead>
+<tbody>
+<tr><td>能否构建类似 Drawly 的实时多人绘图画布?</td><td class="feasible-solid">可以。tldraw sync、Yjs、Liveblocks 等已经在大规模生产环境中验证过。</td></tr>
+<tr><td>AI 能否实时地"逐笔"和你一起画?</td><td class="feasible-feasible">可以,但延迟是主要工程挑战。Sketch-RNN 是基线;2025–2026 年新模型(StrokeFusion、SwiftSketch、VideoSketcher)进一步提升上限。</td></tr>
+<tr><td>能否复刻 AutoDraw 的"自动补完涂鸦"?</td><td class="feasible-solid">可以,而且很容易。QuickDraw 训练的分类器 + 精选剪贴画库即可。</td></tr>
+<tr><td>能否做出 Copilot 风格的"幽灵笔触"建议(按 Tab 接受)?</td><td class="feasible-feasible">可以。Sketch-RNN 在 2017 年的原始 demo 就叫《Draw Together with a Neural Network》,正是这件事。</td></tr>
+<tr><td>AI 在用户绘画时进行语音/文字陪伴?</td><td class="feasible-solid">可以。OpenAI Realtime API(GPT-4o-realtime)、Gemini Live、ElevenLabs 等都很成熟。</td></tr>
+<tr><td>能否做出 ArtWorkout / 多邻国式的游戏化课程?</td><td class="feasible-solid">可以,纯产品工程。笔触准确性可用 DTW + Fréchet 距离实现。</td></tr>
+<tr><td>最大的工程风险</td><td class="sev-high">幽灵笔触在中端硬件上的端到端延迟需控制在 150 毫秒以内。</td></tr>
+<tr><td>最大的产品风险</td><td class="sev-med">避免出现"大眼夹综合征"——AI 建议让人觉得啰嗦或居高临下。</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="refs">
+<h2>二 · 参考产品分析</h2>
+<div class="cards">
+
+  <div class="card">
+    <h3>Drawly <span class="badge copy">社交质感的标杆</span></h3>
+    <div class="src"><a href="https://getdrawly.com/">getdrawly.com</a> · <a href="https://drawly.app/">drawly.app</a></div>
+    <p><strong>做得好的地方:</strong>笔触级实时同步、URL 一键加入房间、零安装的网页入口、极简的工具集。</p>
+    <p><strong>技术线索:</strong>公开资料显示其使用 Firebase Realtime Database 同步——可以用,但成本随规模放大,而且没有 CRDT。</p>
+    <p><strong>值得借鉴:</strong><span class="badge copy">在线状态光标</span> <span class="badge copy">URL→进入房间 &lt; 2 秒</span></p>
+    <p><strong>不应照抄:</strong><span class="badge skip">完全没有 AI 辅助</span>——这正是我们要切入的市场空白。</p>
+  </div>
+
+  <div class="card">
+    <h3>Google AutoDraw <span class="badge copy">最低 AI 辅助标准</span></h3>
+    <div class="src"><a href="https://www.autodraw.com/">autodraw.com</a></div>
+    <p><strong>工作原理:</strong>使用 Google QuickDraw 同款 RNN 分类器(基于 10 亿+ 涂鸦数据集训练),识别用户画的内容后,提供专业插画师绘制的"剪贴画"作为替换选项。</p>
+    <p><strong>局限:</strong>只能<em>整笔替换</em>,无法在绘画过程中自动续笔;没有教学,没有伙伴。</p>
+    <p><strong>可复用部分:</strong>把它的分类器作为"类别先验",用于偏置我们自己的笔触生成模型。</p>
+  </div>
+
+  <div class="card">
+    <h3>ArtWorkout <span class="badge copy">课程体系标杆</span></h3>
+    <div class="src"><a href="https://artworkout.app/">artworkout.app</a></div>
+    <p><strong>工作原理:</strong>2,500+ 节小型课程;算法每秒多次评估笔触<em>准确度、笔触质量、压感</em>;每日能量、连击、多人模式、Loomis 头像法、人体解剖课程。</p>
+    <p><strong>可复用部分:</strong>"参考线覆盖 → 实时打分 → 重做提分"的循环;每日连击/能量经济系统。</p>
+    <p><strong>需要超越:</strong>把它纯几何的反馈替换为一个<em>能讲清楚为什么</em>(比例、轻重、透视)的 LLM 老师。</p>
+  </div>
+
+</div>
+</section>
+
+<section id="matrix">
+<h2>三 · 核心功能可行性矩阵</h2>
+<table>
+<thead><tr><th>编号</th><th>功能</th><th>最接近的现有技术</th><th>可行性</th><th>信心</th></tr></thead>
+<tbody>
+<tr><td>F1</td><td>支持压感 / Apple Pencil 的矢量画布</td><td>tldraw、Excalidraw、Konva、perfect-freehand</td><td class="feasible-solid">已成熟</td><td>99%</td></tr>
+<tr><td>F2</td><td>实时多人(在线状态、光标、笔触同步)</td><td>tldraw sync、Liveblocks、Yjs + y-websocket</td><td class="feasible-solid">已成熟</td><td>99%</td></tr>
+<tr><td>F3</td><td>"自动补完涂鸦"(AutoDraw 同款)</td><td>QuickDraw RNN 分类器</td><td class="feasible-solid">已成熟</td><td>95%</td></tr>
+<tr><td>F4</td><td>Copilot 式幽灵笔触建议</td><td>Sketch-RNN、StrokeFusion(AAAI '26)、SwiftSketch(SIGGRAPH '25)</td><td class="feasible-feasible">可行</td><td>85%</td></tr>
+<tr><td>F5</td><td>AI 伙伴实时与你共同绘画</td><td>VideoSketcher(2026)</td><td class="feasible-feasible">可行</td><td>75%</td></tr>
+<tr><td>F6</td><td>语音/聊天陪伴(老师 / 朋友角色)</td><td>OpenAI Realtime API、Gemini Live、ElevenLabs</td><td class="feasible-solid">已成熟</td><td>95%</td></tr>
+<tr><td>F7</td><td>游戏化课程(课程、连击、能量、经验值)</td><td>ArtWorkout、多邻国</td><td class="feasible-solid">已成熟</td><td>99%</td></tr>
+<tr><td>F8</td><td>实时笔触评分(准确度、压感、流畅度)</td><td>DTW + Fréchet 距离、学习型嵌入</td><td class="feasible-solid">已成熟</td><td>95%</td></tr>
+<tr><td>F9</td><td>"为什么这一笔不对?"语言反馈</td><td>GPT-4o 视觉 + 工具调用</td><td class="feasible-feasible">可行</td><td>80%</td></tr>
+<tr><td>F10</td><td>跨设备(Web + iPad PWA + Apple Pencil)</td><td>PointerEvents API、Procreate 风格 PWA</td><td class="feasible-solid">已成熟</td><td>90%</td></tr>
+</tbody>
+</table>
+<blockquote>核心结论:每一项不是"已成熟"就是"可行",没有一项是"红灯"。</blockquote>
+</section>
+
+<section id="sow">
+<h2>四 · 工作范围(Scope of Work)</h2>
+<div class="phase-grid">
+  <div class="phase p0">
+    <h3>第 0 阶段 — 技术验证(Spike)</h3>
+    <div class="when">约 2 周</div>
+    <p>搭建 tldraw + Yjs 画布;通过 TF.js / ONNX-Web 在浏览器内跑通 Sketch-RNN;在中端硬件上测量首笔延迟。决策:边缘推理(浏览器)还是服务端推理。</p>
+  </div>
+  <div class="phase p1">
+    <h3>第 1 阶段 — MVP "DrawCopilot v0.1"</h3>
+    <div class="when">约 8–10 周 · 单用户</div>
+    <p>矢量画布;笔触事件流架构;F3(AutoDraw 复刻);F4(幽灵笔触 + Tab 接受);账号、项目保存/加载;从第一天起埋点遥测——这些数据将成为我们后续模型训练的飞轮燃料。</p>
+  </div>
+  <div class="phase p2">
+    <h3>第 2 阶段 — "陪我一起画"社交层</h3>
+    <div class="when">约 6–8 周</div>
+    <p>对标 Drawly 的多人房间(tldraw sync 或 Yjs + y-websocket on Cloudflare Durable Objects)。AI 伙伴 v1 作为参与者加入房间。可选语音通道(OpenAI Realtime API)。</p>
+  </div>
+  <div class="phase p3">
+    <h3>第 3 阶段 — "陪我一起学"课程体系</h3>
+    <div class="when">约 6–8 周</div>
+    <p>课程编辑工具;实时打分引擎(DTW + 各项笔触指标);AI 老师(GPT-4o-vision 评估完成稿,Realtime API 朗读修改建议)。连击、能量、经验值、排行榜。</p>
+  </div>
+  <div class="phase p4">
+    <h3>第 4 阶段 — 打磨、移动端、增长</h3>
+    <div class="when">持续进行</div>
+    <p>iPad PWA + Capacitor 原生壳(用于 Pencil 压感与误触屏蔽)。基于自有用户数据训练专属笔触模型。社区画廊。"图像→课程"自动生成管线。</p>
+  </div>
+</div>
+</section>
+
+<section id="stack">
+<h2>五 · 推荐技术栈</h2>
+
+<h4>前端</h4>
+<table>
+<thead><tr><th>关注点</th><th>选型</th><th>原因</th></tr></thead>
+<tbody>
+<tr><td>框架</td><td>Next.js 15(React 19)+ TypeScript</td><td>成熟、支持 SSR、部署简单</td></tr>
+<tr><td>画布</td><td>tldraw SDK <em>或</em> Konva.js + perfect-freehand</td><td>tldraw 开箱即用;Konva 给我们对 Copilot UX 更彻底的掌控权</td></tr>
+<tr><td>压感 / 触控笔</td><td>PointerEvents API(<code>pressure</code>、<code>tiltX/Y</code>)</td><td>原生支持,无需第三方库</td></tr>
+<tr><td>实时同步</td><td>Yjs + y-websocket <em>或</em> tldraw sync</td><td>CRDT、可离线、久经考验</td></tr>
+<tr><td>状态管理</td><td>Zustand + Immer</td><td>轻量</td></tr>
+<tr><td>样式</td><td>Tailwind CSS + shadcn/ui</td><td>快速迭代</td></tr>
+<tr><td>客户端 ML</td><td>TensorFlow.js / ONNX Runtime Web,使用 WebGPU 后端</td><td>在现代设备上可实现 100 毫秒以内的笔触生成</td></tr>
+</tbody>
+</table>
+
+<h4>后端</h4>
+<table>
+<thead><tr><th>关注点</th><th>选型</th><th>原因</th></tr></thead>
+<tbody>
+<tr><td>API</td><td>Node(Fastify)<em>或</em> Python(FastAPI)</td><td>若 ML 团队偏好全 Python 链路则选 FastAPI</td></tr>
+<tr><td>实时房间服务</td><td>Cloudflare Workers + Durable Objects</td><td>每个房间隔离、原生 WebSocket、按用量付费</td></tr>
+<tr><td>数据库</td><td>Postgres(Neon / Supabase / Azure Database for PostgreSQL)</td><td>用户、课程、分数</td></tr>
+<tr><td>对象存储</td><td>S3 / R2 / Azure Blob</td><td>画作、导出文件、参考素材</td></tr>
+<tr><td>身份认证</td><td>Clerk <em>或</em> Auth.js + Microsoft Entra External ID</td><td>抢占上市速度</td></tr>
+<tr><td>缓存 / 发布订阅</td><td>Redis(Upstash)</td><td>在线状态、限流</td></tr>
+</tbody>
+</table>
+
+<h4>AI / 机器学习</h4>
+<table>
+<thead><tr><th>能力</th><th>模型 / 服务</th><th>部署方式</th></tr></thead>
+<tbody>
+<tr><td>涂鸦分类(AutoDraw)</td><td>在 5,000 万涂鸦数据上微调的 QuickDraw RNN / 小型 Transformer</td><td>浏览器内 TF.js(≤ 5 MB)</td></tr>
+<tr><td>下一笔预测(Copilot)</td><td>Sketch-RNN 基线 → 升级到 StrokeFusion / SwiftSketch</td><td>ONNX-Web;无 WebGPU 时回落到服务器</td></tr>
+<tr><td>共绘伙伴</td><td>VideoSketcher 风格的序列生成,基于画师演示视频微调</td><td>服务端 GPU(A10/A100),通过 WebSocket 流式回传笔触</td></tr>
+<tr><td>语音陪伴</td><td>OpenAI Realtime API(gpt-4o-realtime)/ Gemini 2.x Live</td><td>厂商托管</td></tr>
+<tr><td>视觉反馈(课程评分)</td><td>GPT-4o / Claude Sonnet 4.x(具备视觉能力)</td><td>厂商托管</td></tr>
+<tr><td>笔触打分</td><td>DTW + Fréchet 距离;后期引入学习型嵌入</td><td>自研、轻量</td></tr>
+</tbody>
+</table>
+
+<h4>DevOps / 可观测性</h4>
+<p><strong>云平台:</strong>Azure(API 用 App Service / Container Apps;GPU 推理用 AKS 或 Container Apps;托管模型用 Azure OpenAI)——与组织既有的 Azure 体系自然契合。Vercel + Cloudflare 可作为面向公网的前台备选。<br/>
+<strong>CI/CD:</strong>GitHub Actions → Azure Container Registry → Container Apps。<strong>可观测性:</strong>Application Insights + OpenTelemetry,把 <code>firstSuggestionLatency</code> 与 <code>companionStrokeLatency</code> 作为一等公民 SLO 监控。<strong>功能开关:</strong>ConfigCat / LaunchDarkly——我们<em>一定</em>会 A/B 测试 Copilot 建议的"侵入性"强度。</p>
+</section>
+
+<section id="arch">
+<h2>六 · 整体架构</h2>
+<pre>┌───────────────────────────────────────────────────────────────┐
+│                    浏览器 / iPad PWA                          │
+│  ┌──────────────────┐  ┌──────────────┐  ┌─────────────────┐  │
+│  │ tldraw / Konva   │  │ Yjs CRDT 文档│  │ 本地 ML         │  │
+│  │ + perfect-       │◄►│ (笔触、在线  │  │ (TF.js / ONNX,  │  │
+│  │   freehand,      │  │  状态)       │  │  WebGPU)        │  │
+│  │ Pointer/压感     │  │              │  │ → 幽灵笔触      │  │
+│  └────────┬─────────┘  └──────┬───────┘  └────────┬────────┘  │
+└───────────┼───────────────────┼───────────────────┼───────────┘
+            │ 笔触事件          │ y-protocol        │ 候选笔触
+            ▼                   ▼                   ▼
+   ┌────────────────┐  ┌─────────────────┐  ┌──────────────────┐
+   │ 边缘:CF /     │  │ 实时房间服务    │  │ 推理 API         │
+   │ App Service    │  │ (Durable Object │  │ (GPU 池, gRPC)   │
+   │ • 认证/课程    │  │  / WS 广播)     │  │ • StrokeFusion   │
+   │ • 分数持久化   │  │ • 在线状态      │  │ • 共绘 Agent     │
+   └──────┬─────────┘  │ • 快照/落盘     │  │ • 视觉评分       │
+          │            └────────┬────────┘  └────────┬─────────┘
+          ▼                     ▼                    ▼
+  ┌──────────────┐     ┌───────────────┐    ┌─────────────────┐
+  │ Postgres     │     │ Blob (R2 /    │    │ 语音:OpenAI    │
+  │ 用户/课程/   │     │ Azure Blob)   │    │ Realtime / Live │
+  │ 分数 / XP    │     │               │    │ (WebRTC 直连)   │
+  └──────────────┘     └───────────────┘    └─────────────────┘</pre>
+
+<h4>幽灵笔触建议的延迟预算</h4>
+<div class="latency">
+  <div>笔尖抬起 → 笔触事件就绪</div><div>10 毫秒</div>
+  <div>笔触编码 + 推理(浏览器,WebGPU)</div><div>80 毫秒</div>
+  <div>渲染幽灵覆盖层</div><div>20 毫秒</div>
+  <div class="total">用户感知总延迟</div><div class="total">≤ 150 毫秒</div>
+</div>
+<p style="margin-top:10px"><em>一旦超过约 250 毫秒,体验就会从"AI 在和我一起画"退化成"AI 在思考"。这是整个系统最关键的非功能性需求。</em></p>
+</section>
+
+<section id="risks">
+<h2>七 · 风险与缓解措施</h2>
+<table>
+<thead><tr><th>风险</th><th>严重度</th><th>缓解措施</th></tr></thead>
+<tbody>
+<tr><td>幽灵笔触在中端设备上感觉迟钝</td><td class="sev-high">高</td><td>先发布小型(≤ 5 MB)端侧模型;服务端推理仅作回退;主动缓存最近的潜变量状态。</td></tr>
+<tr><td>AI 建议让人厌烦("大眼夹综合征")</td><td class="sev-high">高</td><td>建议默认 opt-in(必须按 Tab 才接受);幽灵笔触自动淡出;用户可调节强度 0–100%。</td></tr>
+<tr><td>训练数据的版权与合规风险</td><td class="sev-med">中</td><td>基线只在 QuickDraw(CC 许可)上训练;高质量微调由我们自费委托画师录制;明确 opt-in 才使用用户数据。</td></tr>
+<tr><td>语音 Realtime API 的规模化成本</td><td class="sev-med">中</td><td>语音 opt-in、按会话计费、限制时长;静默时降级为纯文字。</td></tr>
+<tr><td>多人房间的滥用(色情、骚扰)</td><td class="sev-med">中</td><td>对画布快照进行视觉审核(Azure Content Safety / OpenAI Moderation);举报/屏蔽;默认仅邀请链接才能加入。</td></tr>
+<tr><td>移动端 Safari 对 WebGPU 的兼容性</td><td class="sev-med">中</td><td>探测能力,回落到 WebGL 后端;再回落到服务端推理。</td></tr>
+<tr><td>课程内容的规模化质量</td><td class="sev-med">中</td><td>先由专家手作 30 节高质量课程;留存指标验证后再投入"自动生成课程"管线。</td></tr>
+<tr><td>与现有玩家(Procreate / Drawly / ArtWorkout)的差异化</td><td class="sev-low">战略</td><td>切入点 = 三者的<em>组合</em> + Copilot UX。现有任何产品都没有"幽灵下一笔"这种交互。</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="brain">
+<h2>八 · 产品创意脑暴</h2>
+<ol>
+  <li><strong>角色市场。</strong>允许创作者发布 AI 伙伴(如"鲍勃·罗斯"、"吉卜力前辈"、"刻薄艺术教授")。每个角色 = 系统提示词 + 语音 + 风格微调,平台与作者分成。</li>
+  <li><strong>回放与延时摄影。</strong>每一笔都是有时间戳的事件 → 免费导出延时摄影视频。是天然的 TikTok / Instagram 增长素材。</li>
+  <li><strong>"全图 Tab 优化"。</strong>不止下一笔——在完成稿上按 Tab,AI 提出整体优化方案,用户可以"逐笔接受"。</li>
+  <li><strong>每日多人挑战。</strong>类似 ArtWorkout 的每日命题,与陌生人现场对画 + AI 评委。一个功能融合三大支柱。</li>
+  <li><strong>风格迁移到"用户自己"。</strong>基于用户过往作品训练,让伙伴学会用户<em>本人</em>的画风,而非把人塞进通用模板。</li>
+  <li><strong>无障碍优势。</strong>幽灵笔触 + 语音老师对运动控制困难、视觉处理差异等用户群体异常友好,值得作为明确设计目标。</li>
+  <li><strong>教育合作。</strong>ArtWorkout 已经验证了 C 端;真正的市场扩展在 K-12 与成人教育的整包合作。</li>
+  <li><strong>本地优先模式。</strong>"私密模式":Sketch-RNN 完全在浏览器内运行,不上传、不埋点。隐私是对抗大厂的护城河。</li>
+</ol>
+</section>
+
+<section id="open">
+<h2>九 · 待团队决策的开放问题</h2>
+<ol>
+  <li><strong>品牌定位:</strong>"画画版 Copilot"(开发者气质)还是"你的 AI 画画好朋友"(消费者气质)?在动手做 UI 之前必须先定——两者要求的视觉调性完全不同。</li>
+  <li><strong>商业模式:</strong>订阅(对标 ArtWorkout)、Credits 按次付费,还是 Freemium + 装饰性笔刷?</li>
+  <li><strong>伙伴默认行为:</strong>共享房间里 AI 自发画,还是只在被召唤时才画?<em>强烈倾向:v1 仅在召唤时。</em></li>
+  <li><strong>平台优先级:</strong>Web 优先(覆盖最广、开发最快)还是 iPad 优先(笔触体验最佳、付费意愿最高)?<em>建议:Web 先发,iPad PWA 紧随其后。</em></li>
+  <li><strong>数据策略:</strong>"自愿贡献笔触数据"飞轮?给贡献者哪种回报或分成?</li>
+</ol>
+</section>
+
+<section id="rec">
+<h2>十 · 最终建议</h2>
+<blockquote><strong>建议立项推进。</strong>用 2 周时间完成第 0 阶段技术验证。决定性问题不是"技术存不存在"——它已经存在——而是我们能否在中端笔记本上把幽灵笔触延迟控制在约 150 毫秒以内。如果验证阶段能达到这个门槛,后面所有功能都只是"工程实现",且每一项都已有充分先例。</blockquote>
+<p>战略洞察:<strong>Drawly、AutoDraw、ArtWorkout 当前都没有 Copilot 风格的"按 Tab 接受下一笔"交互。</strong>这就是我们的切入楔子。协作画布与游戏化课程是<em>护盘的标配</em>,作用是让这枚楔子撑得起一个完整产品。</p>
+</section>
+
+<h2>附录 · 关键参考资料</h2>
+<ul>
+  <li><a href="https://getdrawly.com/">Drawly — getdrawly.com</a> · <a href="https://drawly.app/">drawly.app</a></li>
+  <li><a href="https://www.autodraw.com/">Google AutoDraw</a></li>
+  <li><a href="https://quickdraw.withgoogle.com/data">Quick, Draw! 数据集</a></li>
+  <li><a href="https://magenta.tensorflow.org/sketch_rnn">Sketch-RNN(Magenta 项目)</a> · <a href="https://magenta.tensorflow.org/sketch-rnn-demo">Draw Together Demo</a></li>
+  <li><a href="https://arxiv.org/abs/2503.23752">StrokeFusion(AAAI 2026)</a></li>
+  <li><a href="https://swiftsketch.github.io/">SwiftSketch(SIGGRAPH 2025)</a></li>
+  <li><a href="https://arxiv.org/html/2602.15819v1">VideoSketcher(2026)</a></li>
+  <li><a href="https://artworkout.app/">ArtWorkout</a></li>
+  <li><a href="https://tldraw.dev/reference/sync-core/TLSocketRoom">tldraw sync</a></li>
+  <li><a href="https://blog.excalidraw.com/building-excalidraw-p2p-collaboration-feature">Excalidraw 协作复盘</a></li>
+  <li><a href="https://platform.openai.com/docs/guides/realtime">OpenAI Realtime API</a></li>
+  <li><a href="https://github.com/steveruizok/perfect-freehand">perfect-freehand</a></li>
+</ul>
+
+<footer>DrawCopilotLab 技术可行性研究报告 · 编制于 2026 年 5 月 · 用于产品与工程立项规划。</footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DrawCopilotLab — Technical Feasibility Report</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #161a22;
+    --panel-2: #1d2230;
+    --ink: #e7ecf3;
+    --ink-dim: #aab3c2;
+    --accent: #7c5cff;
+    --accent-2: #22d3ee;
+    --good: #34d399;
+    --warn: #fbbf24;
+    --bad: #f87171;
+    --rule: #2a3142;
+    --code-bg: #0b0d12;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+      --panel-2: #f1f3f8;
+      --ink: #0f1115;
+      --ink-dim: #4a5568;
+      --accent: #5b3df5;
+      --accent-2: #0ea5b7;
+      --good: #047857;
+      --warn: #b45309;
+      --bad: #b91c1c;
+      --rule: #e2e8f0;
+      --code-bg: #0f172a;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 56px 28px 96px;
+  }
+  header.hero {
+    background: linear-gradient(135deg, rgba(124,92,255,.18), rgba(34,211,238,.12));
+    border: 1px solid var(--rule);
+    border-radius: 20px;
+    padding: 36px 36px 32px;
+    margin-bottom: 36px;
+    position: relative;
+    overflow: hidden;
+  }
+  header.hero::after {
+    content: "";
+    position: absolute; right: -80px; top: -80px;
+    width: 280px; height: 280px;
+    background: radial-gradient(closest-side, rgba(124,92,255,.35), transparent);
+    filter: blur(20px);
+    pointer-events: none;
+  }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    font-size: 12px;
+    color: var(--ink-dim);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-size: 40px;
+    line-height: 1.15;
+    margin: 0 0 8px;
+    letter-spacing: -0.01em;
+  }
+  h1 .accent { color: var(--accent); }
+  .tagline {
+    color: var(--ink-dim);
+    font-size: 17px;
+    margin: 0 0 18px;
+  }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;
+  }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px;
+    background: var(--panel-2);
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    font-size: 12.5px;
+    color: var(--ink-dim);
+  }
+  .pill.good   { color: var(--good); border-color: rgba(52,211,153,.3); }
+  .pill.warn   { color: var(--warn); border-color: rgba(251,191,36,.3); }
+  .pill.accent { color: var(--accent); border-color: rgba(124,92,255,.4); }
+
+  h2 {
+    margin: 48px 0 14px;
+    font-size: 26px;
+    letter-spacing: -0.01em;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 10px;
+  }
+  h3 { font-size: 19px; margin-top: 28px; }
+  h4 { font-size: 15px; color: var(--ink-dim); text-transform: uppercase; letter-spacing: .08em; margin-top: 22px; }
+  p, li { color: var(--ink); }
+  a { color: var(--accent-2); text-decoration: none; border-bottom: 1px dotted rgba(34,211,238,.4); }
+  a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  code, pre { font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace; }
+  code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; font-size: 13px; }
+  pre {
+    background: var(--code-bg);
+    color: #e7ecf3;
+    padding: 16px 18px;
+    border-radius: 12px;
+    overflow-x: auto;
+    font-size: 12.5px;
+    line-height: 1.55;
+    border: 1px solid var(--rule);
+  }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    margin: 18px 0;
+    padding: 6px 16px;
+    color: var(--ink-dim);
+    background: rgba(124,92,255,.06);
+    border-radius: 0 10px 10px 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 8px;
+    font-size: 14px;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  th {
+    background: var(--panel-2);
+    color: var(--ink-dim);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-size: 11.5px;
+  }
+  tr:last-child td { border-bottom: 0; }
+  td.sev-high  { color: var(--bad); font-weight: 600; }
+  td.sev-med   { color: var(--warn); font-weight: 600; }
+  td.sev-low   { color: var(--good); font-weight: 600; }
+  td.feasible-solid    { color: var(--good); font-weight: 600; }
+  td.feasible-feasible { color: var(--accent-2); font-weight: 600; }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+    margin-top: 16px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 18px 18px 16px;
+  }
+  .card h3 { margin: 0 0 6px; font-size: 17px; }
+  .card .src { font-size: 12px; color: var(--ink-dim); margin-bottom: 8px; }
+  .card p { margin: 6px 0; font-size: 14px; }
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-right: 6px;
+  }
+  .badge.copy { background: rgba(52,211,153,.15); color: var(--good); }
+  .badge.skip { background: rgba(248,113,113,.15); color: var(--bad); }
+
+  .phase-grid { display: grid; gap: 12px; margin-top: 12px; }
+  .phase {
+    background: var(--panel);
+    border-left: 4px solid var(--accent);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .phase.p0 { border-left-color: var(--accent-2); }
+  .phase.p1 { border-left-color: var(--accent); }
+  .phase.p2 { border-left-color: #f472b6; }
+  .phase.p3 { border-left-color: var(--warn); }
+  .phase.p4 { border-left-color: var(--good); }
+  .phase h3 { margin: 0 0 4px; font-size: 16px; }
+  .phase .when { font-size: 12px; color: var(--ink-dim); margin-bottom: 6px; }
+
+  .toc {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 16px 22px;
+    margin-bottom: 32px;
+    columns: 2;
+    column-gap: 28px;
+  }
+  .toc ol { margin: 0; padding-left: 22px; }
+  .toc li { padding: 2px 0; break-inside: avoid; }
+
+  .latency {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px 18px;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 14px 18px;
+    max-width: 540px;
+    font-size: 14px;
+  }
+  .latency .total { font-weight: 700; color: var(--accent); border-top: 1px solid var(--rule); padding-top: 8px; }
+
+  footer {
+    margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--rule);
+    color: var(--ink-dim); font-size: 13px;
+  }
+
+  @media (max-width: 720px) {
+    .toc { columns: 1; }
+    h1 { font-size: 30px; }
+    .wrap { padding: 28px 16px 64px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">Technical Feasibility Report · May 2026</div>
+  <h1>DrawCopilotLab — <span class="accent">Copilot for your sketchbook</span></h1>
+  <p class="tagline">Real-time collaborative canvas + Copilot-style stroke autocompletion + Duolingo-style gamified curriculum, with an AI companion that draws <em>with</em> you.</p>
+  <div class="meta">
+    <span class="pill good">Verdict: Technically feasible today</span>
+    <span class="pill accent">MVP est. 4–5 months</span>
+    <span class="pill warn">Critical risk: stroke-suggestion latency &lt; 150 ms</span>
+    <span class="pill">Working name: DrawCopilotLab</span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Table of contents">
+  <ol>
+    <li><a href="#summary">Executive Summary</a></li>
+    <li><a href="#refs">Reference App Analysis</a></li>
+    <li><a href="#matrix">Feature → Feasibility Matrix</a></li>
+    <li><a href="#sow">Scope of Work</a></li>
+    <li><a href="#stack">Recommended Tech Stack</a></li>
+    <li><a href="#arch">High-Level Architecture</a></li>
+    <li><a href="#risks">Risks &amp; Mitigations</a></li>
+    <li><a href="#brain">Brainstorm</a></li>
+    <li><a href="#open">Open Questions</a></li>
+    <li><a href="#rec">Recommendation</a></li>
+  </ol>
+</nav>
+
+<section id="summary">
+<h2>1 · Executive Summary</h2>
+<p>Every individual capability already ships in production-grade form somewhere in industry. The novelty is the <strong>combination</strong>: a real-time collaborative canvas, Copilot-style stroke autocompletion, and a Duolingo-style gamified curriculum, wrapped around an AI companion that draws with the user.</p>
+
+<table>
+<thead><tr><th>Question</th><th>Short Answer</th></tr></thead>
+<tbody>
+<tr><td>Drawly-like real-time, multi-user drawing canvas?</td><td class="feasible-solid">Yes. tldraw sync, Yjs, Liveblocks already do this at scale.</td></tr>
+<tr><td>AI drawing <em>with</em> you stroke-by-stroke in real time?</td><td class="feasible-feasible">Yes, latency is the engineering challenge. Sketch-RNN baseline; 2025–2026 models (StrokeFusion, SwiftSketch, VideoSketcher) raise the ceiling.</td></tr>
+<tr><td>AutoDraw's "complete my doodle"?</td><td class="feasible-solid">Yes — QuickDraw classifier + curated clip-art library.</td></tr>
+<tr><td>Copilot-style ghosted next-stroke (Tab to accept)?</td><td class="feasible-feasible">Yes. Sketch-RNN's original 2017 demo literally does this.</td></tr>
+<tr><td>AI chat / voice companion during drawing?</td><td class="feasible-solid">Yes. OpenAI Realtime API (GPT-4o-realtime), Gemini Live, ElevenLabs.</td></tr>
+<tr><td>Gamified daily lessons (ArtWorkout / Duolingo)?</td><td class="feasible-solid">Yes. Pure product engineering. Stroke-accuracy via DTW + Fréchet.</td></tr>
+<tr><td>Hardest engineering risk</td><td class="sev-high">End-to-end ghost-stroke latency &lt; 150 ms on mid-tier hardware.</td></tr>
+<tr><td>Hardest product risk</td><td class="sev-med">Avoiding the "Clippy problem" — suggestions that feel patronizing.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="refs">
+<h2>2 · Reference App Analysis</h2>
+<div class="cards">
+
+  <div class="card">
+    <h3>Drawly <span class="badge copy">Quality bar</span></h3>
+    <div class="src"><a href="https://getdrawly.com/">getdrawly.com</a> · <a href="https://drawly.app/">drawly.app</a></div>
+    <p><strong>What works:</strong> stroke-level liveness, instant-room URLs, zero-install web entry, brutally simple toolset.</p>
+    <p><strong>Stack signals:</strong> Firebase Realtime DB for sync — fine, but cost-inefficient at scale and CRDT-less.</p>
+    <p><strong>Copy:</strong> <span class="badge copy">presence cursors</span> <span class="badge copy">URL-to-room &lt; 2 s</span></p>
+    <p><strong>Skip:</strong> <span class="badge skip">no AI assist anywhere</span> — that's literally our gap.</p>
+  </div>
+
+  <div class="card">
+    <h3>Google AutoDraw <span class="badge copy">Min AI bar</span></h3>
+    <div class="src"><a href="https://www.autodraw.com/">autodraw.com</a></div>
+    <p><strong>How it works:</strong> the QuickDraw RNN classifier trained on 1B+ doodles; the UI offers professionally-drawn clip-art replacements.</p>
+    <p><strong>Limits:</strong> only <em>replaces</em>, never autocompletes mid-drawing; no teaching, no companion.</p>
+    <p><strong>Reuse:</strong> the classifier as a category prior to bias our generative stroke model.</p>
+  </div>
+
+  <div class="card">
+    <h3>ArtWorkout <span class="badge copy">Curriculum bar</span></h3>
+    <div class="src"><a href="https://artworkout.app/">artworkout.app</a></div>
+    <p><strong>How it works:</strong> 2,500+ bite-sized lessons; stroke accuracy + pressure scored several times per second; daily energy, streaks, multiplayer mode, Loomis-method &amp; anatomy courses.</p>
+    <p><strong>Reuse:</strong> trace-overlay → real-time score → retry-to-improve loop; the daily-streak/energy economy.</p>
+    <p><strong>Improve:</strong> replace pure-geometry feedback with an LLM tutor that <em>explains</em> the why (proportion, weight, perspective).</p>
+  </div>
+
+</div>
+</section>
+
+<section id="matrix">
+<h2>3 · Core Feature → Feasibility Matrix</h2>
+<table>
+<thead><tr><th>#</th><th>Feature</th><th>Closest Prior Art</th><th>Feasibility</th><th>Conf.</th></tr></thead>
+<tbody>
+<tr><td>F1</td><td>Vector canvas, pressure / Apple-Pencil support</td><td>tldraw, Excalidraw, Konva, perfect-freehand</td><td class="feasible-solid">Solved</td><td>99%</td></tr>
+<tr><td>F2</td><td>Real-time multiplayer (presence, cursor, stroke sync)</td><td>tldraw sync, Liveblocks, Yjs + y-websocket</td><td class="feasible-solid">Solved</td><td>99%</td></tr>
+<tr><td>F3</td><td>"Auto-finish my doodle" (AutoDraw clone)</td><td>QuickDraw RNN classifier</td><td class="feasible-solid">Solved</td><td>95%</td></tr>
+<tr><td>F4</td><td>Copilot-style ghost-stroke prediction</td><td>Sketch-RNN, StrokeFusion (AAAI '26), SwiftSketch (SIGGRAPH '25)</td><td class="feasible-feasible">Feasible</td><td>85%</td></tr>
+<tr><td>F5</td><td>AI companion that draws <em>with</em> you in real time</td><td>VideoSketcher (2026)</td><td class="feasible-feasible">Feasible</td><td>75%</td></tr>
+<tr><td>F6</td><td>Voice/chat companion (teacher / friend persona)</td><td>OpenAI Realtime API, Gemini Live, ElevenLabs</td><td class="feasible-solid">Solved</td><td>95%</td></tr>
+<tr><td>F7</td><td>Gamified curriculum (lessons, streaks, energy, XP)</td><td>ArtWorkout, Duolingo</td><td class="feasible-solid">Solved</td><td>99%</td></tr>
+<tr><td>F8</td><td>Real-time stroke scoring (accuracy, pressure, flow)</td><td>DTW + Fréchet distance, learned embeddings</td><td class="feasible-solid">Solved</td><td>95%</td></tr>
+<tr><td>F9</td><td>"Why is my stroke wrong?" verbal feedback</td><td>GPT-4o vision + tool-calling</td><td class="feasible-feasible">Feasible</td><td>80%</td></tr>
+<tr><td>F10</td><td>Cross-device (web + iPad PWA + Apple Pencil)</td><td>PointerEvents API, Procreate-style PWAs</td><td class="feasible-solid">Solved</td><td>90%</td></tr>
+</tbody>
+</table>
+<blockquote>Bottom line: every cell is green or amber. There is no red.</blockquote>
+</section>
+
+<section id="sow">
+<h2>4 · Scope of Work</h2>
+<div class="phase-grid">
+  <div class="phase p0">
+    <h3>Phase 0 — Spike &amp; Validate</h3>
+    <div class="when">~2 weeks</div>
+    <p>tldraw + Yjs canvas; Sketch-RNN in browser via TF.js / ONNX-Web; measure first-stroke latency on mid-tier hardware. Decide edge vs. server inference.</p>
+  </div>
+  <div class="phase p1">
+    <h3>Phase 1 — MVP "DrawCopilot v0.1"</h3>
+    <div class="when">~8–10 weeks · single-user</div>
+    <p>Vector canvas, stroke-event stream, F3 (AutoDraw clone), F4 (ghost-stroke + Tab-to-accept), accounts, project save/load, telemetry from day 1 (this becomes our training flywheel).</p>
+  </div>
+  <div class="phase p2">
+    <h3>Phase 2 — "Draw With Me" social layer</h3>
+    <div class="when">~6–8 weeks</div>
+    <p>Drawly-parity multiplayer rooms (tldraw sync or Yjs + y-websocket on Cloudflare Durable Objects). AI companion v1 joins as a participant. Optional voice via OpenAI Realtime API.</p>
+  </div>
+  <div class="phase p3">
+    <h3>Phase 3 — "Learn With Me" curriculum</h3>
+    <div class="when">~6–8 weeks</div>
+    <p>Lesson authoring tool, real-time scoring (DTW + per-stroke metrics), AI tutor (GPT-4o-vision rates &amp; narrates corrections via Realtime API). Streaks, energy, XP, league boards.</p>
+  </div>
+  <div class="phase p4">
+    <h3>Phase 4 — Polish, mobile, growth</h3>
+    <div class="when">ongoing</div>
+    <p>iPad PWA + Capacitor wrapper for Pencil pressure &amp; palm rejection. Custom-trained stroke models on our own data. Gallery / community. Image-to-lesson pipeline.</p>
+  </div>
+</div>
+</section>
+
+<section id="stack">
+<h2>5 · Recommended Tech Stack</h2>
+
+<h4>Frontend</h4>
+<table>
+<thead><tr><th>Concern</th><th>Pick</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>Framework</td><td>Next.js 15 (React 19) + TypeScript</td><td>Mature, SSR, easy deploy</td></tr>
+<tr><td>Canvas</td><td>tldraw SDK <em>or</em> Konva.js + perfect-freehand</td><td>tldraw if batteries-included; Konva for full Copilot-UX control</td></tr>
+<tr><td>Pressure / Pencil</td><td>PointerEvents API (<code>pressure</code>, <code>tiltX/Y</code>)</td><td>Native, no library</td></tr>
+<tr><td>Real-time sync</td><td>Yjs + y-websocket <em>or</em> tldraw sync</td><td>CRDT, offline-tolerant</td></tr>
+<tr><td>State</td><td>Zustand + Immer</td><td>Lightweight</td></tr>
+<tr><td>Styling</td><td>Tailwind + shadcn/ui</td><td>Fast iteration</td></tr>
+<tr><td>Client ML</td><td>TensorFlow.js / ONNX Runtime Web with WebGPU</td><td>Sub-100 ms stroke gen on modern hardware</td></tr>
+</tbody>
+</table>
+
+<h4>Backend</h4>
+<table>
+<thead><tr><th>Concern</th><th>Pick</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>API</td><td>Node (Fastify) <em>or</em> Python (FastAPI)</td><td>FastAPI if ML team prefers Python end-to-end</td></tr>
+<tr><td>Realtime room server</td><td>Cloudflare Workers + Durable Objects</td><td>Per-room isolation, WebSocket-native, pay-per-use</td></tr>
+<tr><td>Database</td><td>Postgres (Neon / Supabase / Azure Database for PostgreSQL)</td><td>Users, lessons, scores</td></tr>
+<tr><td>Blob storage</td><td>S3 / R2 / Azure Blob</td><td>Drawings, exports, references</td></tr>
+<tr><td>Auth</td><td>Clerk <em>or</em> Auth.js + Microsoft Entra External ID</td><td>Speed to market</td></tr>
+<tr><td>Cache / pubsub</td><td>Redis (Upstash)</td><td>Presence, rate limits</td></tr>
+</tbody>
+</table>
+
+<h4>AI / ML</h4>
+<table>
+<thead><tr><th>Capability</th><th>Model / Service</th><th>Hosting</th></tr></thead>
+<tbody>
+<tr><td>Sketch classification (AutoDraw)</td><td>Fine-tuned QuickDraw RNN / small Transformer on 50M doodles</td><td>TF.js in-browser (≤5 MB)</td></tr>
+<tr><td>Next-stroke prediction (Copilot)</td><td>Sketch-RNN baseline → upgrade to StrokeFusion / SwiftSketch</td><td>ONNX-Web; server fallback when no WebGPU</td></tr>
+<tr><td>Co-drawing companion</td><td>VideoSketcher-style sequential gen, fine-tuned on artist demos</td><td>Server GPU (A10/A100), WebSocket-streamed strokes</td></tr>
+<tr><td>Voice companion</td><td>OpenAI Realtime API (gpt-4o-realtime) / Gemini 2.x Live</td><td>Vendor-hosted</td></tr>
+<tr><td>Vision feedback (lesson grading)</td><td>GPT-4o / Claude Sonnet 4.x with vision</td><td>Vendor-hosted</td></tr>
+<tr><td>Stroke scoring</td><td>DTW + Fréchet distance; learned embeddings later</td><td>In-house, lightweight</td></tr>
+</tbody>
+</table>
+
+<h4>DevOps</h4>
+<p><strong>Cloud:</strong> Azure (App Service / Container Apps for API; AKS or Container Apps for GPU inference; Azure OpenAI for managed models). Vercel + Cloudflare for the public-facing surface as an alternative.<br/>
+<strong>CI/CD:</strong> GitHub Actions → ACR → Container Apps. <strong>Observability:</strong> Application Insights + OpenTelemetry, with <code>firstSuggestionLatency</code> and <code>companionStrokeLatency</code> as first-class SLOs. <strong>Feature flags:</strong> ConfigCat / LaunchDarkly — we <em>will</em> A/B-test how aggressive the Copilot is.</p>
+</section>
+
+<section id="arch">
+<h2>6 · High-Level Architecture</h2>
+<pre>┌───────────────────────────────────────────────────────────────┐
+│                  Browser / iPad PWA                           │
+│  ┌──────────────────┐  ┌──────────────┐  ┌─────────────────┐  │
+│  │ tldraw / Konva   │  │ Yjs CRDT doc │  │ Local ML        │  │
+│  │ + perfect-       │◄►│ (strokes,    │  │ (TF.js / ONNX,  │  │
+│  │   freehand,      │  │  presence)   │  │  WebGPU)        │  │
+│  │ Pointer/Pressure │  │              │  │ → ghost strokes │  │
+│  └────────┬─────────┘  └──────┬───────┘  └────────┬────────┘  │
+└───────────┼───────────────────┼───────────────────┼───────────┘
+            │ stroke events     │ y-protocol        │ candidates
+            ▼                   ▼                   ▼
+   ┌────────────────┐  ┌─────────────────┐  ┌──────────────────┐
+   │ Edge: CF /     │  │ Realtime Room   │  │ Inference API    │
+   │ App Service    │  │ Service (DO /   │  │ (GPU pool, gRPC) │
+   │ • Auth/lessons │  │  WS fan-out)    │  │ • StrokeFusion   │
+   │ • Score persist│  │ • Presence      │  │ • Co-draw agent  │
+   └──────┬─────────┘  │ • Snapshot/save │  │ • Vision grader  │
+          │            └────────┬────────┘  └────────┬─────────┘
+          ▼                     ▼                    ▼
+  ┌──────────────┐     ┌───────────────┐    ┌─────────────────┐
+  │ Postgres     │     │ Blob (R2 /    │    │ Voice: OpenAI   │
+  │ users/lessons│     │ Azure Blob)   │    │ Realtime / Live │
+  │ scores / XP  │     │               │    │ (WebRTC direct) │
+  └──────────────┘     └───────────────┘    └─────────────────┘</pre>
+
+<h4>Latency budget — ghost-stroke suggestions</h4>
+<div class="latency">
+  <div>PointerUp → stroke event ready</div><div>10 ms</div>
+  <div>Stroke encode + inference (browser, WebGPU)</div><div>80 ms</div>
+  <div>Render ghost overlay</div><div>20 ms</div>
+  <div class="total">User-perceived total</div><div class="total">≤ 150 ms</div>
+</div>
+<p style="margin-top:10px"><em>Anything above ~250 ms feels "AI is thinking" instead of "AI is drawing with me." This is the single most important non-functional requirement.</em></p>
+</section>
+
+<section id="risks">
+<h2>7 · Risks &amp; Mitigations</h2>
+<table>
+<thead><tr><th>Risk</th><th>Severity</th><th>Mitigation</th></tr></thead>
+<tbody>
+<tr><td>Ghost-stroke latency feels sluggish on mid-range devices</td><td class="sev-high">High</td><td>Ship a small (≤5 MB) on-device model first; server inference as fallback; cache recent latent states.</td></tr>
+<tr><td>AI suggestions feel annoying (the "Clippy problem")</td><td class="sev-high">High</td><td>Opt-in (Tab to accept); ghosts auto-fade; user-tunable intensity 0–100%.</td></tr>
+<tr><td>Copyright / training-data concerns</td><td class="sev-med">Medium</td><td>Train on QuickDraw (CC-licensed) only; commission original artist demos for higher-quality fine-tunes; clear opt-in for user-data training.</td></tr>
+<tr><td>Realtime API costs at scale (voice)</td><td class="sev-med">Medium</td><td>Voice opt-in, per-session, capped duration; downgrade to text when idle.</td></tr>
+<tr><td>Multiplayer abuse (NSFW, harassment)</td><td class="sev-med">Medium</td><td>Vision moderation (Azure Content Safety / OpenAI Moderation) on canvas snapshots; report/mute; share-link gated rooms.</td></tr>
+<tr><td>Mobile Safari quirks with WebGPU</td><td class="sev-med">Medium</td><td>Detect &amp; fall back to WebGL; further fall back to server inference.</td></tr>
+<tr><td>Curriculum quality at scale</td><td class="sev-med">Medium</td><td>Start with 30 expert-authored lessons; only invest in auto-lesson pipeline after retention is proven.</td></tr>
+<tr><td>Differentiation vs. Procreate / Drawly / ArtWorkout</td><td class="sev-low">Strategic</td><td>Wedge = the <em>combination</em> + the Copilot UX. None of the incumbents have ghosted next-stroke suggestions.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="brain">
+<h2>8 · Brainstorm — Ideas We're Sitting On</h2>
+<ol>
+  <li><strong>Persona marketplace.</strong> Let creators publish AI companions ("Bob Ross", "Studio Ghibli senpai", "grumpy art prof"). Persona = system prompt + voice + drawing-style fine-tune. Revenue share.</li>
+  <li><strong>Replay &amp; timelapse.</strong> Every stroke is a typed event → free time-lapse export. Great for TikTok / IG growth.</li>
+  <li><strong>"Tab-to-improve" globally.</strong> Beyond next-stroke: Tab on a finished drawing → AI proposes a whole-drawing polish that you accept stroke-by-stroke.</li>
+  <li><strong>Daily challenge multiplayer.</strong> ArtWorkout-style daily prompt, drawn live with a stranger + an AI judge. Combines all three pillars in one feature.</li>
+  <li><strong>Drawing-style transfer.</strong> Trained on the user's own past drawings, the companion adapts to <em>their</em> style.</li>
+  <li><strong>Accessibility angle.</strong> Ghost-stroke + voice tutor is unusually friendly for users with motor-control or visual-processing differences. Worth designing for explicitly.</li>
+  <li><strong>Education partnerships.</strong> ArtWorkout proves the consumer market; the real TAM expansion is K-12 and adult-ed bundles.</li>
+  <li><strong>Local-first option.</strong> "Private mode": Sketch-RNN runs entirely in-browser, no server hop, no telemetry. Privacy is a moat against bigger players.</li>
+</ol>
+</section>
+
+<section id="open">
+<h2>9 · Open Questions for the Team</h2>
+<ol>
+  <li><strong>Brand positioning:</strong> "Copilot for drawing" (developer-flavored) vs. "Your AI drawing buddy" (consumer-flavored)? Pick before any UI work — they imply different aesthetics.</li>
+  <li><strong>Monetization:</strong> subscription (ArtWorkout-style) vs. credits (per-AI-call) vs. freemium with cosmetic brushes?</li>
+  <li><strong>Default companion behavior:</strong> draws unprompted in shared rooms, or only when summoned? <em>Strong opinion: only when summoned, in v1.</em></li>
+  <li><strong>Platform priority:</strong> Web-first (largest reach, easiest dev) vs. iPad-first (best pen UX, highest WTP)? <em>Suggest web-first, iPad-PWA fast-follow.</em></li>
+  <li><strong>Data strategy:</strong> opt-in donate-your-strokes flywheel? With what rev-share or perks?</li>
+</ol>
+</section>
+
+<section id="rec">
+<h2>10 · Recommendation</h2>
+<blockquote><strong>Proceed.</strong> Build the Phase-0 spike in two weeks. The decisive question is not whether the technology exists — it does — but whether we can keep ghost-stroke latency under ~150 ms on a mid-tier laptop. If we hit that bar in the spike, every other feature is "just engineering" and well-precedented.</blockquote>
+<p>The strategic insight: <strong>none of Drawly, AutoDraw, or ArtWorkout currently ships a Copilot-style stroke-completion UX.</strong> That is our wedge. The collaborative canvas and the gamified curriculum are <em>table stakes</em> we add to make the wedge a product.</p>
+</section>
+
+<h2>Appendix · Key References</h2>
+<ul>
+  <li><a href="https://getdrawly.com/">Drawly — getdrawly.com</a> · <a href="https://drawly.app/">drawly.app</a></li>
+  <li><a href="https://www.autodraw.com/">Google AutoDraw</a></li>
+  <li><a href="https://quickdraw.withgoogle.com/data">Quick, Draw! dataset</a></li>
+  <li><a href="https://magenta.tensorflow.org/sketch_rnn">Sketch-RNN (Magenta)</a> · <a href="https://magenta.tensorflow.org/sketch-rnn-demo">Draw Together demo</a></li>
+  <li><a href="https://arxiv.org/abs/2503.23752">StrokeFusion (AAAI 2026)</a></li>
+  <li><a href="https://swiftsketch.github.io/">SwiftSketch (SIGGRAPH 2025)</a></li>
+  <li><a href="https://arxiv.org/html/2602.15819v1">VideoSketcher (2026)</a></li>
+  <li><a href="https://artworkout.app/">ArtWorkout</a></li>
+  <li><a href="https://tldraw.dev/reference/sync-core/TLSocketRoom">tldraw sync</a></li>
+  <li><a href="https://blog.excalidraw.com/building-excalidraw-p2p-collaboration-feature">Excalidraw collab post-mortem</a></li>
+  <li><a href="https://platform.openai.com/docs/guides/realtime">OpenAI Realtime API</a></li>
+  <li><a href="https://github.com/steveruizok/perfect-freehand">perfect-freehand</a></li>
+</ul>
+
+<footer>DrawCopilotLab feasibility report · prepared May 2026 · author: research notes for product/engineering planning.</footer>
+
+</div>
+</body>
+</html>

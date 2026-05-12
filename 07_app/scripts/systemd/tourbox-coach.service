@@ -1,0 +1,25 @@
+[Unit]
+Description=TourBox Coach API (FastAPI / uvicorn)
+Documentation=https://github.com/anthropic-ai/claude-code
+After=network-online.target ollama.service
+Wants=network-online.target ollama.service
+
+[Service]
+Type=simple
+User=tourbox
+Group=tourbox
+WorkingDirectory=/home/tourbox/tourbox-coach
+EnvironmentFile=/home/tourbox/tourbox-coach/.env
+ExecStart=/home/tourbox/tourbox-coach/venv/bin/uvicorn backend.main:app --host 0.0.0.0 --port 8000
+Restart=on-failure
+RestartSec=5
+# Stop politely; uvicorn handles SIGTERM and exits in <2s.
+KillSignal=SIGTERM
+TimeoutStopSec=10
+# Allow access to /var/log if we ever log there; sessions/ live under $HOME.
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=tourbox-coach
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+websockets
+numpy
+scipy
+pillow
+pydantic
+ollama
+openai
+python-dotenv
+httpx

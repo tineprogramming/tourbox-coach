@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>2-Week MVP — Feature Decision Memo · DrawCopilotLab</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #161a22;
+    --panel-2: #1d2230;
+    --ink: #e7ecf3;
+    --ink-dim: #aab3c2;
+    --accent: #ff7a5c;
+    --accent-2: #22d3ee;
+    --good: #34d399;
+    --warn: #fbbf24;
+    --bad: #f87171;
+    --rule: #2a3142;
+    --code-bg: #0b0d12;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+      --panel-2: #f1f3f8;
+      --ink: #0f1115;
+      --ink-dim: #4a5568;
+      --accent: #d94d2b;
+      --accent-2: #0ea5b7;
+      --good: #047857;
+      --warn: #b45309;
+      --bad: #b91c1c;
+      --rule: #e2e8f0;
+      --code-bg: #0f172a;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 56px 28px 96px; }
+  header.hero {
+    background: linear-gradient(135deg, rgba(255,122,92,.18), rgba(34,211,238,.10));
+    border: 1px solid var(--rule);
+    border-radius: 20px;
+    padding: 36px 36px 32px;
+    margin-bottom: 36px;
+    position: relative; overflow: hidden;
+  }
+  header.hero::after {
+    content: ""; position: absolute; right: -80px; top: -80px;
+    width: 280px; height: 280px;
+    background: radial-gradient(closest-side, rgba(255,122,92,.32), transparent);
+    filter: blur(20px); pointer-events: none;
+  }
+  .eyebrow {
+    text-transform: uppercase; letter-spacing: .14em; font-size: 12px;
+    color: var(--ink-dim); margin-bottom: 8px;
+  }
+  h1 { font-size: 38px; line-height: 1.18; margin: 0 0 8px; letter-spacing: -0.01em; }
+  h1 .accent { color: var(--accent); }
+  .tagline { color: var(--ink-dim); font-size: 17px; margin: 0 0 18px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px;
+    background: var(--panel-2);
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    font-size: 12.5px; color: var(--ink-dim);
+  }
+  .pill.good   { color: var(--good); border-color: rgba(52,211,153,.3); }
+  .pill.warn   { color: var(--warn); border-color: rgba(251,191,36,.3); }
+  .pill.accent { color: var(--accent); border-color: rgba(255,122,92,.45); }
+
+  h2 {
+    margin: 48px 0 14px; font-size: 26px; letter-spacing: -0.01em;
+    border-bottom: 1px solid var(--rule); padding-bottom: 10px;
+  }
+  h3 { font-size: 18px; margin-top: 26px; }
+  h4 { font-size: 14px; color: var(--ink-dim); text-transform: uppercase; letter-spacing: .08em; margin-top: 22px; }
+  p, li { color: var(--ink); }
+  a { color: var(--accent-2); text-decoration: none; border-bottom: 1px dotted rgba(34,211,238,.4); }
+  a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  code, pre { font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace; }
+  code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; font-size: 13px; }
+  pre {
+    background: var(--code-bg); color: #e7ecf3;
+    padding: 16px 18px; border-radius: 12px; overflow-x: auto;
+    font-size: 12.5px; line-height: 1.55;
+    border: 1px solid var(--rule);
+  }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    margin: 18px 0; padding: 6px 16px;
+    color: var(--ink-dim);
+    background: rgba(255,122,92,.06);
+    border-radius: 0 10px 10px 0;
+  }
+  table {
+    width: 100%; border-collapse: collapse; margin: 14px 0 8px;
+    font-size: 14px; background: var(--panel);
+    border: 1px solid var(--rule); border-radius: 12px; overflow: hidden;
+  }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { background: var(--panel-2); color: var(--ink-dim); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; font-size: 11.5px; }
+  tr:last-child td { border-bottom: 0; }
+  td.green { color: var(--good); font-weight: 600; }
+  td.amber { color: var(--warn); font-weight: 600; }
+  td.gray  { color: var(--ink-dim); }
+
+  .toc {
+    background: var(--panel); border: 1px solid var(--rule);
+    border-radius: 14px; padding: 16px 22px;
+    margin-bottom: 32px; columns: 2; column-gap: 28px;
+  }
+  .toc ol { margin: 0; padding-left: 22px; }
+  .toc li { padding: 2px 0; break-inside: avoid; }
+
+  .feat-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-top: 14px; }
+  .feat {
+    background: var(--panel); border: 1px solid var(--rule);
+    border-left: 4px solid var(--accent);
+    border-radius: 12px; padding: 16px 18px;
+  }
+  .feat.f1 { border-left-color: var(--accent); }
+  .feat.f2 { border-left-color: var(--accent-2); }
+  .feat.f3 { border-left-color: var(--good); }
+  .feat.f4 { border-left-color: var(--warn); }
+  .feat h3 { margin: 0 0 4px; font-size: 16px; }
+  .feat .label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-dim); margin-bottom: 8px; }
+
+  .checks { list-style: none; padding: 0; }
+  .checks li {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .checks .box {
+    width: 18px; height: 18px;
+    border: 1.5px solid var(--accent);
+    border-radius: 4px; flex-shrink: 0;
+    margin-top: 3px;
+  }
+  footer {
+    margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--rule);
+    color: var(--ink-dim); font-size: 13px;
+  }
+  @media (max-width: 720px) {
+    .toc { columns: 1; } h1 { font-size: 30px; }
+    .wrap { padding: 28px 16px 64px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">Feature Decision Memo · DrawCopilotLab · May 2026</div>
+  <h1>2-Week MVP — <span class="accent">Decide what ships, decide what waits</span></h1>
+  <p class="tagline">A focused single-user demo that satisfies the client CEO, plants the strategic data-flywheel, and avoids betting the sprint on R&amp;D.</p>
+  <div class="meta">
+    <span class="pill accent">Delivery: Day 14 demo to client</span>
+    <span class="pill good">Recommended scope: 3 features (F1 + F2 + F3)</span>
+    <span class="pill warn">Explicit deferral: novel pressure/tilt/time stroke-prediction model</span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Table of contents">
+  <ol>
+    <li><a href="#summary">TL;DR — Recommended scope</a></li>
+    <li><a href="#problem">The decision problem</a></li>
+    <li><a href="#features">Recommended feature set</a></li>
+    <li><a href="#plan">Day-by-day plan</a></li>
+    <li><a href="#stack">Tech stack</a></li>
+    <li><a href="#defer">Why we are NOT building the model in 2 weeks</a></li>
+    <li><a href="#risks">Risks</a></li>
+    <li><a href="#asks">Open questions for the client</a></li>
+    <li><a href="#decisions">Decision asks</a></li>
+    <li><a href="#mapping">Mapping to client's roadmap</a></li>
+  </ol>
+</nav>
+
+<section id="summary">
+<h2>TL;DR — Recommended Scope</h2>
+<p>Build a <strong>single-user, web-based "DrawCopilot Demo Bench"</strong> that does three things, all on top of the client's pen-display hardware:</p>
+
+<div class="feat-grid">
+  <div class="feat f1">
+    <div class="label">F1 · CEO crowd-pleaser</div>
+    <h3>"Polish My Drawing" — Sketch-to-Image polish</h3>
+    <p>User scribbles → AI returns 4 polished variants in 4 styles. <em>The AutoDraw + Samsung Gemini moment the CEO wants to see.</em></p>
+  </div>
+  <div class="feat f2">
+    <div class="label">F2 · the strategic wedge</div>
+    <h3>Pen-Process Recorder + UIM export</h3>
+    <p>Captures every stroke event with full <code>(x, y, p, tilt_x, tilt_y, t)</code> fidelity. Exports JSONL <em>and</em> Wacom Universal Ink Model. <strong>Data-flywheel seed corn.</strong></p>
+  </div>
+  <div class="feat f3">
+    <div class="label">F3 · process-aware, no ML</div>
+    <h3>Stroke Replay + Perspective/Symmetry Assist</h3>
+    <p>Pure-geometry features that prove the rich pen data is wired in <em>today</em> — even before any new model exists.</p>
+  </div>
+  <div class="feat f4">
+    <div class="label">F4 · stretch only</div>
+    <h3>Sketch-RNN ghost-stroke (off-the-shelf)</h3>
+    <p>Only if F1–F3 ship by Day 9. Validates the Copilot UX gesture, with a candid "this is a public 2017 model, not yours" disclaimer.</p>
+  </div>
+</div>
+
+<p style="margin-top:18px"><strong>Explicitly deferred:</strong> the novel pressure/tilt/time-aware <em>next-stroke prediction model</em> the client deck describes. R&amp;D risk does not fit a 2-week box. See <a href="#defer">§5</a>.</p>
+</section>
+
+<section id="problem">
+<h2>1 · The Decision Problem</h2>
+<p>Three pressures pull on the 2-week scope:</p>
+<table>
+<thead><tr><th>Pressure</th><th>Source</th><th>Implication</th></tr></thead>
+<tbody>
+<tr><td>Land a CEO-pleasing demo fast</td><td>Client CEO loves <strong>AutoDraw</strong> and Samsung Galaxy AI's <strong>Drawing Assist / Sketch-to-Image</strong>; explicitly told us <em>"this is something that can be built fast."</em></td><td>Use existing image-gen APIs (ControlNet-scribble / SDXL / fal.ai / Replicate / Azure OpenAI Image). Ships in days.</td></tr>
+<tr><td>Prove the strategic wedge</td><td>Client deck (slides 4, 7, 12): the moat is <em>stroke-process data</em>, not the polished image. Their value is the data ingress — <code>(x, y, p, tilt, t)</code> at 200 Hz with full session context.</td><td>We must demonstrate the data pipeline, not just call someone else's image API.</td></tr>
+<tr><td>Honor the team's R&amp;D realism</td><td>Engineering memo from product owner: <em>"R&amp;D takes longer; new pressure/time/tilt models take try-and-error… ship in 1–2 months first, work on new models longer term."</em></td><td>Defer novel sequence-modeling ML. Use only off-the-shelf models in the 2-week window.</td></tr>
+</tbody>
+</table>
+<blockquote>The MVP must satisfy <em>all three</em> in 14 days. The recommended scope does that by <strong>decoupling the visible demo from the strategic infrastructure</strong>, while making sure the strategic infrastructure produces at least one visible demo (perspective assist + replay).</blockquote>
+</section>
+
+<section id="features">
+<h2>2 · Recommended Feature Set</h2>
+
+<h3>F1 — "Polish My Drawing" (CEO crowd-pleaser)</h3>
+<ul>
+  <li><strong>UX:</strong> draws on canvas → clicks <em>Polish</em> → 2–4 styles appear (Watercolor, Anime/Manga, Concept Art, Pencil Sketch). Each style produces 1–2 variants. User picks one to keep on a new layer.</li>
+  <li><strong>How:</strong> off-the-shelf scribble-conditioned image model — ControlNet-Scribble / SDXL-Turbo via fal.ai or Replicate; alternative Azure OpenAI Image. Server-side only.</li>
+  <li><strong>Why safe in 2 weeks:</strong> zero novel ML. ~1 day to integrate, ~2 days for UI / styling presets.</li>
+  <li><strong>Caveat:</strong> least differentiated feature on the list — every consumer phone now ships it. We frame it as the demo-friendly veneer; F2 is the actual moat.</li>
+</ul>
+
+<h3>F2 — Pen-Process Recorder + Standard Export (the strategic wedge)</h3>
+<ul>
+  <li><strong>UX:</strong> a small "Recording" indicator. After session, a <em>Download session log</em> button.</li>
+  <li><strong>What's actually happening:</strong> every PointerEvent written to a typed event stream — <code>pressure</code>, <code>tiltX/Y</code>, derived <code>azimuth</code> &amp; <code>instantaneous speed</code>, plus session context (layer id, tool id, undo/redo id, intent-stage tag if user opts in).</li>
+  <li><strong>Two export formats:</strong>
+    <ul>
+      <li><code>session.jsonl</code> — our own line-delimited format, easy for ML.</li>
+      <li><code>session.uim</code> — Wacom <strong>Universal Ink Model</strong> (Protocol Buffers v3 + RIFF). Directly answers slide 9: <em>"extend WILL / Wintab / HID."</em> Use Wacom's published UIM SDK — no need to invent a format.</li>
+    </ul>
+  </li>
+  <li><strong>Why safe in 2 weeks:</strong> the browser already gives us all the fields via PointerEvents API; we just log them. UIM SDK does the binary serialization.</li>
+  <li><strong>The moat in disguise:</strong> every recorded session is <em>training data we own</em>. If our long-term model takes 6 months to build, we'll have 6 months of pristine data when we start training.</li>
+</ul>
+
+<h3>F3 — Stroke Replay + Perspective/Symmetry Assist (process-aware, no ML)</h3>
+<ul>
+  <li><strong>Stroke replay:</strong> scrub a timeline; the canvas redraws stroke-by-stroke at original speed (or 4×). Demos that "we have the whole process, not just the picture."</li>
+  <li><strong>Perspective grid:</strong> 1-/2-/3-point perspective overlay; pen tilt aligns the active vanishing line. <em>Uses tilt data immediately — pure geometry, no model.</em></li>
+  <li><strong>Symmetry mirror:</strong> vertical / radial mirror. Strokes reflected with <em>correct pressure and tilt</em> on the mirrored side — a small but visible flex of why rich data matters.</li>
+  <li><strong>Why these together:</strong> they prove "rich pen data → visible value" is real <em>without</em> waiting for a new model. They line up with slide 10 (<em>"driver-level smart pen — perspective / symmetry assist; teachable / replayable"</em>).</li>
+</ul>
+
+<h3>F4 — Stretch only: off-the-shelf next-stroke ghost</h3>
+<p>Drop in <strong>Sketch-RNN</strong> (Magenta) via TF.js, behind a feature flag. Only ship if F1–F3 are green by Day 9. Demo must be honest: this is the public 2017 model on QuickDraw — <em>not</em> the model we'll eventually build with their pressure/tilt data. Job is to validate the UX, not the IP.</p>
+
+<h4>Out of scope for the 2-week MVP</h4>
+<table>
+<thead><tr><th>Out</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>Multiplayer / shared rooms (Drawly-style)</td><td>Not on CEO's wish list; CRDT / WebSocket complexity eats the whole sprint.</td></tr>
+<tr><td>Voice companion (Realtime API)</td><td>Not asked for; runs over budget on cost discussion.</td></tr>
+<tr><td>Gamified curriculum (ArtWorkout-style)</td><td>Big content + product effort; not asked for.</td></tr>
+<tr><td>Novel pressure/tilt/time stroke-prediction model</td><td>Genuinely R&amp;D — needs data F2 only starts producing.</td></tr>
+<tr><td>iPad / mobile native shell</td><td>Web demo first; client's hardware is Windows pen displays.</td></tr>
+<tr><td>User accounts, billing, sharing</td><td>Demo runs locally on a fresh laptop with the client's hardware. Local-first is fine.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="plan">
+<h2>3 · Day-by-Day Plan</h2>
+<p><em>Assumes 2 frontend, 1 backend / glue, 1 ML / integration, 1 part-time designer. Single-dev or pair changes the math; flag on Day 0.</em></p>
+<table>
+<thead><tr><th>Day</th><th>A — Canvas + Recorder</th><th>B — Polish API + UI</th><th>C — Replay + Assist</th></tr></thead>
+<tbody>
+<tr><td><strong>D1</strong></td><td>Scope freeze, repo + CI, hardware bring-up. <strong>Confirm <code>PointerEvents</code> exposes <code>pressure</code> &amp; <code>tiltX/Y</code> for their driver — #1 risk to de-risk on Day 1.</strong></td><td>Spike: pick image-gen vendor (fal.ai vs. Replicate vs. Azure OpenAI Image). Latency + cost test on 20 sample scribbles.</td><td>Wireframes for replay scrubber, perspective overlay, symmetry mirror.</td></tr>
+<tr><td><strong>D2</strong></td><td>Vector canvas (Konva + perfect-freehand), pen-event stream architecture.</td><td>Style-preset list locked (4 styles). Prompt templates.</td><td>Math for perspective grid (1/2/3-point) + symmetry transforms.</td></tr>
+<tr><td><strong>D3</strong></td><td>Local stroke log → JSONL on disk; basic verification viewer.</td><td>First end-to-end "scribble → polished image" round-trip in dev.</td><td>Replay scrubber MVP (forward-only).</td></tr>
+<tr><td><strong>D4</strong></td><td>Wacom UIM SDK integration; export <code>.uim</code> file.</td><td>UI: style picker grid, generate button, result lightbox.</td><td>Perspective overlay rendered on canvas.</td></tr>
+<tr><td><strong>D5</strong></td><td>Add session context: layer id, tool id, undo/redo id, intent-stage tag.</td><td>Variant rejection / accept-as-layer flow.</td><td>Symmetry mirror with correct pressure &amp; tilt reflection.</td></tr>
+<tr><td><strong>D6</strong></td><td>Recorder telemetry: events/sec, log size, dropped events.</td><td>Style A/B test harness.</td><td>Replay 4× / timeline scrubbing both directions.</td></tr>
+<tr><td><strong>D7</strong></td><td colspan="3"><strong>Mid-sprint demo internally</strong> — team plays artist for an hour and watches what the recorder logs. Fix gaps.</td></tr>
+<tr><td><strong>D8</strong></td><td>Stretch: Sketch-RNN ghost-stroke (F4) behind flag, only if A/B/C green.</td><td>Style fine-tune of prompts based on D7 demo.</td><td>Polish perspective + symmetry UX.</td></tr>
+<tr><td><strong>D9</strong></td><td>Demo dataset: 5 pre-recorded sessions exported as <code>.uim</code>.</td><td>Demo-ready: 4 scribbles × 4 styles pre-cached for offline backup.</td><td>Demo-ready replay clips.</td></tr>
+<tr><td><strong>D10</strong></td><td>End-to-end smoke + load test. Telemetry dashboard for demo.</td><td>Demo script.</td><td>Buffer / bug fixes.</td></tr>
+<tr><td>D11–D12</td><td colspan="3">Buffer days. Dress rehearsal Day 12.</td></tr>
+<tr><td>D13</td><td colspan="3">Demo dry-run with internal stakeholders. Lock build.</td></tr>
+<tr><td><strong>D14</strong></td><td colspan="3"><strong>Demo to client.</strong></td></tr>
+</tbody>
+</table>
+<blockquote><strong>Daily standup discipline:</strong> every standup answers <em>"is the recorder still capturing every event with full fidelity?"</em> That is the single most important non-negotiable — it defines whether we're really collecting the moat data.</blockquote>
+</section>
+
+<section id="stack">
+<h2>4 · Tech Stack — Conservative Choices for a 2-Week Sprint</h2>
+<p>Every decision boring, because boring ships.</p>
+<ul>
+  <li><strong>Frontend:</strong> Next.js 15 + TypeScript + Tailwind. Canvas: <strong>Konva.js + perfect-freehand</strong> (over tldraw — we want full control of the recorder hooks, and we're not building multiplayer this sprint).</li>
+  <li><strong>Pen capture:</strong> native <code>PointerEvents</code> API. Day-1 validation that the client's driver populates <code>pressure</code>, <code>tiltX/Y</code>. Wacom and Huion drivers do; the client's might not.</li>
+  <li><strong>Stroke standard:</strong> <strong>Wacom Universal Ink Model (UIM)</strong> via the published SDK — keeps us aligned with slide 9's WILL/Wintab/HID extension theme without inventing our own format.</li>
+  <li><strong>Backend:</strong> FastAPI on Azure Container Apps. SQLite for sessions in the demo (not Postgres — too much yak-shaving for 2 weeks).</li>
+  <li><strong>Storage:</strong> local <code>./sessions/</code> on the demo box; optional Azure Blob if time permits Day 9–10.</li>
+  <li><strong>Sketch-to-image vendor:</strong> primary <strong>fal.ai</strong> (lowest p95 latency on scribble-conditioned models); fallback <strong>Replicate</strong>; enterprise fallback <strong>Azure OpenAI Image</strong> (compliance-friendly, useful for the partnership story).</li>
+  <li><strong>CI / hosting:</strong> GitHub Actions; demo runs on the client's laptop locally — no cloud demo dependency.</li>
+  <li><strong>Observability:</strong> structured logs + a one-page dashboard for stroke-rate, polish-API latency, model cost.</li>
+</ul>
+<blockquote><strong>No frameworks added in week 2.</strong> Whatever we picked Day 1, we live with.</blockquote>
+</section>
+
+<section id="defer">
+<h2>5 · Why We Are NOT Building the Novel Stroke-Prediction Model in 2 Weeks</h2>
+<p>This deserves its own section because it's where we'll get the most pushback from the client. The deck (slides 4, 7, 8, 10) describes a model that takes <code>(x, y, pressure, tilt, time)</code> sequences and predicts the next stroke in the artist's own style. Building that in 2 weeks is unrealistic for five concrete reasons:</p>
+<ol>
+  <li><strong>No labeled training data exists yet.</strong> The whole point of this partnership is that nobody has process-data corpora. First-party data starts arriving the day F2 ships. We need at least weeks of recordings before training <em>any</em> personalization model meaningfully.</li>
+  <li><strong>Public stroke models (Sketch-RNN, StrokeFusion, SwiftSketch) ignore pressure and tilt.</strong> They treat strokes as <code>(x, y, pen_state)</code> triples. Adapting their architectures to add 3 more dimensions is a research project — empirical sequence-model work routinely takes weeks per ablation.</li>
+  <li><strong>Personalization needs an evaluation harness</strong> before we can claim it works. A 2-week MVP can't ship that harness <em>and</em> the model <em>and</em> the UX.</li>
+  <li><strong>End-to-end latency budget is very tight.</strong> Slide 7 promises sub-10 ms feedback. Even a small Transformer at 200 Hz strokes is hard to keep under that bar; we'd need NPU-level inference and quantization. Out of scope.</li>
+  <li><strong>"Try-and-error" is exactly what the product memo flagged.</strong> Spending sprint capacity on a research bet that might not produce a runnable artifact is the worst use of the 2 weeks.</li>
+</ol>
+<p><strong>What we propose instead:</strong> position F2 (recorder + UIM export) as <strong>Phase 0</strong> in the client's own roadmap — slide 13: <em>"Phase 0 — jointly define the standard &amp; data-collection spec."</em> We are literally delivering the artifact slide 13 asks for, plus a CEO-level demo that papers over the model gap with off-the-shelf image-gen.</p>
+<table>
+<thead><tr><th>When</th><th>What</th></tr></thead>
+<tbody>
+<tr><td>Weeks 3–6 (post-MVP)</td><td>Recruit ~30 artists onto the recorder. Accumulate ~200 hours of process data tagged with intent-stages.</td></tr>
+<tr><td>Weeks 4–8</td><td>First model spike: a Transformer over <code>(x, y, p, tx, ty, dt)</code> token streams. Evaluate next-stroke top-k accuracy and held-out user adaptation.</td></tr>
+<tr><td>Months 3–6</td><td>The proper <em>Phase 1</em> of the client's roadmap: stroke-prediction + perspective assist productized.</td></tr>
+</tbody>
+</table>
+<blockquote>This timeline both honors the engineering team's "R&amp;D takes longer" memo and lands inside the client's own slide-13 <em>"Phase 1 (3–6 months)"</em> window — i.e. we are not slipping their plan, we are <em>rephasing the first 14 days inside Phase 0</em>.</blockquote>
+</section>
+
+<section id="risks">
+<h2>6 · Risks for the 2-Week Window</h2>
+<table>
+<thead><tr><th>Risk</th><th>Likelihood</th><th>Mitigation</th></tr></thead>
+<tbody>
+<tr><td>Client's pen driver doesn't expose <code>tiltX/Y</code> to the browser</td><td class="amber">Medium</td><td>Day-1 verification on real hardware. Fallback A: native helper app (Electron / Win32) reading Wintab and forwarding via WebSocket. Fallback B: degrade gracefully — log existing fields, mark tilt as <code>null</code> in <code>.uim</code>.</td></tr>
+<tr><td>Sketch-to-image vendor goes down on demo day</td><td class="gray">Low–Medium</td><td>Pre-cache 4 scribbles × 4 styles on Day 9. Demo can fall back to playback from cache.</td></tr>
+<tr><td><code>PointerEvents</code> rate too low (&lt;60 Hz) on demo machine</td><td class="amber">Medium</td><td>Use <code>getCoalescedEvents()</code> to recover sub-frame samples (Wacom drivers report 200+ Hz this way). Verify Day 1.</td></tr>
+<tr><td>Cost spike from unmetered image API calls</td><td class="gray">Low</td><td>Per-session cap, daily $ ceiling, kill-switch in admin.</td></tr>
+<tr><td>Scope creep — "can we add multiplayer / voice / lessons?"</td><td class="amber">High</td><td>This memo. Get sign-off Day 0.</td></tr>
+<tr><td>Expectation mismatch — CEO sees polish demo and asks "where's the next-stroke prediction?"</td><td class="amber">High</td><td>Demo script must lead with <strong>F3 (the perspective/symmetry/replay piece)</strong>, framed as <em>"this is what's possible with your pen data, today, with no new model"</em>, then F1 as the polish layer. F4 only if shipped, with the candid disclaimer it's a public model, not theirs.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="asks">
+<h2>7 · Open Questions for the Client (raise on Day 0)</h2>
+<ol>
+  <li>Which pen-display SKU should the demo target? Confirm OS (Windows? Wacom-Bamboo-style USB-HID? Their own driver?) and whether they have a Linux/macOS variant.</li>
+  <li>Preferred <strong>on-device runtime</strong> for future work — ONNX Runtime, TensorRT, Qualcomm SNPE, MediaTek APU? Affects Phase-1 model choice but not the 2-week MVP.</li>
+  <li>Will their driver team give us access to the <strong>raw HID report</strong> (potentially higher sample rate / extra bytes), or just the OS-level <code>(x, y, pressure, tilt)</code> stream? <em>The real moat question.</em></li>
+  <li>Comfortable with the demo invoking a third-party image-gen API (fal/Replicate/Azure OpenAI), or do they require self-hosted? Affects vendor pick.</li>
+  <li>Whose brand fronts the demo — theirs, ours, or neutral "DrawCopilot Lab"?</li>
+</ol>
+</section>
+
+<section id="decisions">
+<h2>8 · Decision Asks</h2>
+<p>Three sign-offs needed from product / leadership before Day 0:</p>
+<ul class="checks">
+  <li><span class="box"></span><span><strong>Scope</strong> — approve the F1 + F2 + F3 set; explicitly approve the deferral of the novel stroke-prediction model.</span></li>
+  <li><span class="box"></span><span><strong>Vendor</strong> — approve the sketch-to-image vendor pick (recommended: <strong>fal.ai</strong>, with Azure OpenAI as the enterprise alternative).</span></li>
+  <li><span class="box"></span><span><strong>Demo framing</strong> — approve the script's <em>"the moat is in the data we just started recording, not the polish API the demo opens with"</em> narrative. <strong>Single most important framing decision</strong>; it determines whether the CEO walks out impressed by AutoDraw (commodity) or by what they alone can build over the next 6 months (the real partnership thesis).</span></li>
+</ul>
+</section>
+
+<section id="mapping">
+<h2>Appendix — Mapping This MVP to the Client's Slide-13 Roadmap</h2>
+<table>
+<thead><tr><th>Client phase</th><th>Client deliverable</th><th>What our 2-week MVP gives them</th></tr></thead>
+<tbody>
+<tr><td>Phase 0 — joint standards</td><td>Define standard + collection spec</td><td class="green">Done. F2 ships a <code>.uim</code>-compatible recorder; spec doc produced as part of MVP; we extend WILL/Wintab on paper.</td></tr>
+<tr><td>Phase 1 — 3–6 months MVP</td><td>Stroke prediction + perspective assist</td><td class="amber">Partial. Perspective + symmetry assist shipped today (no ML); stroke-prediction prep work begins post-MVP with data the recorder produces.</td></tr>
+<tr><td>Phase 2 — 6–12 months GA</td><td>Process replay + teaching mode</td><td class="amber">Partial. Stroke replay shipped today as a demo feature; productization in Phase 2.</td></tr>
+<tr><td>Phase 3 — 12–18 months ecosystem</td><td>SDK + content platform</td><td class="gray">Out of scope. Recorder format becomes the seed of the eventual SDK.</td></tr>
+</tbody>
+</table>
+<blockquote>The 2-week MVP is <strong>a complete Phase-0 deliverable + a CEO-grade preview slice of Phases 1–2</strong>. That's a credible promise we can keep.</blockquote>
+</section>
+
+<footer>2-Week MVP Decision Memo · DrawCopilotLab · prepared May 2026 for product / engineering sign-off.</footer>
+
+</div>
+</body>
+</html>
